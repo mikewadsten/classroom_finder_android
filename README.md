@@ -1,9 +1,8 @@
 UMN Classroom Finder for Android
 ================================
 
-This is my Android app interfacing with the UMN Classroom Finder
-website [UMN Classroom Finder](http://brontasaur.us). It is not complete
-at this time, nor is it what you might consider functional.
+This is my Android app interfacing with the [UMN Classroom Finder](http://brontasaur.us).
+It is not complete at this time, nor is it what you might consider functional.
 
 Notes
 -----
