@@ -22,6 +22,7 @@ import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.SpinnerAdapter;
 import android.widget.Toast;
@@ -44,6 +45,39 @@ import android.widget.Toast;
  */
 public class ClassroomListActivity extends FragmentActivity implements
 ClassroomListFragment.Callbacks {
+    
+    private class RefreshManager {
+        private MenuItem refreshIcon;
+        private boolean isRefreshing;
+        
+        public RefreshManager() {
+        }
+        
+        public void setIcon(MenuItem icon) {
+            refreshIcon = icon;
+        }
+        
+        public void updateRefresh(boolean refreshing) {
+            if (refreshIcon == null)
+                return;
+            
+            isRefreshing = refreshing;
+            
+            if (isRefreshing)
+                refreshIcon.setActionView(R.layout.action_bar_indeterminate_progress);
+            else
+                refreshIcon.setActionView(null);
+        }
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem refresh = menu.findItem(R.id.refresh);
+        if (refresh != null) {
+            mRefresh.setIcon(refresh);
+        }
+        return true;
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -52,12 +86,24 @@ ClassroomListFragment.Callbacks {
         return true;
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+        case R.id.refresh:
+            mRefresh.updateRefresh(true);
+            new Search().execute("http://mikewadsten.com/test.json");
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
      * device.
      */
     private boolean mTwoPane;
     private Handler mHandler;
+    private RefreshManager mRefresh;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +128,8 @@ ClassroomListFragment.Callbacks {
 
         ActionBar bar = getActionBar();
         bar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+        
+        mRefresh = new RefreshManager();
 
         SpinnerAdapter mSpinnerAdapter = ArrayAdapter.createFromResource(this, R.array.campus_list,
                 android.R.layout.simple_spinner_dropdown_item);
@@ -96,8 +144,6 @@ ClassroomListFragment.Callbacks {
         };
         
         bar.setListNavigationCallbacks(mSpinnerAdapter, navListener);
-        
-        new Search().execute("http://mikewadsten.com/test.json");
     }
 
     /**
@@ -151,15 +197,28 @@ ClassroomListFragment.Callbacks {
             ClassroomContent.addItem(new ClassroomContent.Classroom(Integer.toString(i), content));
         }
         
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                // TODO Auto-generated method stub
-                ClassroomListFragment f = (ClassroomListFragment) getSupportFragmentManager().findFragmentById(R.id.classroom_list);
-                ((ArrayAdapter)f.getListAdapter()).notifyDataSetChanged();
-            }
-        });
-
+        try {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    ClassroomListFragment f = (ClassroomListFragment) getSupportFragmentManager().findFragmentById(R.id.classroom_list);
+                    if (f == null) {
+                        Log.e("Classes.update", "list fragment null");
+                        return;
+                    }
+                    ArrayAdapter a = (ArrayAdapter)f.getListAdapter();
+                    if (a == null) {
+                        Log.e("Classes.update", "list adapter null");
+                        return;
+                    }
+                    a.notifyDataSetChanged();
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        mRefresh.updateRefresh(false);
     }
 
     private class Search extends AsyncTask<String, Void, String> {

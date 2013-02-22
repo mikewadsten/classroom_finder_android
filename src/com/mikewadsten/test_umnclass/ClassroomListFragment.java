@@ -87,6 +87,8 @@ public class ClassroomListFragment extends ListFragment {
 			setActivatedPosition(savedInstanceState
 					.getInt(STATE_ACTIVATED_POSITION));
 		}
+		
+		setEmptyText("Classes not loaded yet.");
 	}
 
 	@Override
