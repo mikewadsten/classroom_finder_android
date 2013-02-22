@@ -3,8 +3,6 @@ package com.mikewadsten.test_umnclass;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -87,8 +85,10 @@ public class ClassroomListFragment extends ListFragment {
 			setActivatedPosition(savedInstanceState
 					.getInt(STATE_ACTIVATED_POSITION));
 		}
-		
+
 		setEmptyText("Classes not loaded yet.");
+        // Fast scroll makes life easier
+        getListView().setFastScrollEnabled(true);
 	}
 
 	@Override

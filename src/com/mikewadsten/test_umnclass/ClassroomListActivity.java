@@ -110,7 +110,8 @@ ClassroomListFragment.Callbacks {
      * device.
      */
     private boolean mTwoPane;
-    private Handler mHandler;
+    @SuppressWarnings("unused")
+	private Handler mHandler;
     private RefreshManager mRefresh;
 
     @Override
