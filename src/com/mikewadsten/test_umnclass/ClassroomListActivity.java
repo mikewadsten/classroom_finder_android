@@ -15,9 +15,11 @@ import org.json.JSONObject;
 import android.app.ActionBar;
 import android.app.ActionBar.OnNavigationListener;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -91,7 +93,8 @@ ClassroomListFragment.Callbacks {
         switch (item.getItemId()) {
         case R.id.refresh:
             mRefresh.updateRefresh(true);
-            new Search().execute("http://mikewadsten.com/test.json");
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            new Search().execute(prefs.getString("pref_server_url", "http://mikewadsten.com/test.json"));
             return true;
         case R.id.settings:
             Intent settingsIntent = new Intent(this,
@@ -179,48 +182,52 @@ ClassroomListFragment.Callbacks {
         }
     }
 
-    private void searchResult(JSONArray arr) {
-        ArrayList<JSONObject> objs = new ArrayList<JSONObject>();
-        try {
-            int len = arr.length();
-            for (int i = 0; i < len; i++) {
-                try {
-                    objs.add(arr.getJSONObject(i));
-                } catch (Exception e) {
+    private void searchResult(JSONArray arr, boolean success) {
+        if (success) {
+            // We can't update data if we got nothing back.
+            ArrayList<JSONObject> objs = new ArrayList<JSONObject>();
+            try {
+                int len = arr.length();
+                for (int i = 0; i < len; i++) {
+                    try {
+                        objs.add(arr.getJSONObject(i));
+                    } catch (Exception e) {
+                    }
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        ClassroomContent.ITEMS.clear();
-        ClassroomContent.ITEM_MAP.clear();
-
-        for (int i = 0; i < objs.size(); i++) {
-            JSONObject o = objs.get(i);
-            String content = (String) o.keys().next();
-            ClassroomContent.addItem(new ClassroomContent.Classroom(Integer.toString(i), content));
-        }
-        
-        try {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    ClassroomListFragment f = (ClassroomListFragment) getSupportFragmentManager().findFragmentById(R.id.classroom_list);
-                    if (f == null) {
-                        Log.e("Classes.update", "list fragment null");
-                        return;
+    
+            ClassroomContent.ITEMS.clear();
+            ClassroomContent.ITEM_MAP.clear();
+    
+            for (int i = 0; i < objs.size(); i++) {
+                JSONObject o = objs.get(i);
+                String content = (String) o.keys().next();
+                ClassroomContent.addItem(new ClassroomContent.Classroom(Integer.toString(i), content));
+            }
+            
+            try {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ClassroomListFragment f = (ClassroomListFragment) getSupportFragmentManager().findFragmentById(R.id.classroom_list);
+                        if (f == null) {
+                            Log.e("Classes.update", "list fragment null");
+                            return;
+                        }
+                        @SuppressWarnings("rawtypes") // Silly typecasting...
+                        ArrayAdapter a = (ArrayAdapter)f.getListAdapter();
+                        if (a == null) {
+                            Log.e("Classes.update", "list adapter null");
+                            return;
+                        }
+                        a.notifyDataSetChanged();
                     }
-                    ArrayAdapter a = (ArrayAdapter)f.getListAdapter();
-                    if (a == null) {
-                        Log.e("Classes.update", "list adapter null");
-                        return;
-                    }
-                    a.notifyDataSetChanged();
-                }
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         
         mRefresh.updateRefresh(false);
@@ -231,10 +238,10 @@ ClassroomListFragment.Callbacks {
         @Override
         protected String doInBackground(String... urls) {
             String reply = "";
-            String url = urls[0];
-            DefaultHttpClient client = new DefaultHttpClient();
-            HttpGet get = new HttpGet(url);
             try {
+                String url = urls[0];
+                DefaultHttpClient client = new DefaultHttpClient();
+                HttpGet get = new HttpGet(url);
                 HttpResponse ex = client.execute(get);
                 InputStream is = ex.getEntity().getContent();
 
@@ -248,7 +255,7 @@ ClassroomListFragment.Callbacks {
                 return String.format("Error: %s", e.toString());
             }
 
-            Log.i(".Search", String.format("%s", reply));
+            Log.d("Search result", String.format("%s", reply));
 
             return reply;
         }
@@ -258,12 +265,13 @@ ClassroomListFragment.Callbacks {
             try {
                 JSONArray obj = new JSONArray(result);
 //                Toast.makeText(getApplicationContext(), obj.toString(2), Toast.LENGTH_SHORT).show();
-                searchResult(obj);
+                searchResult(obj, true);
             } catch (JSONException e) {
                 Log.w("CLA.oPE", result);
                 e.printStackTrace();
                 String err = "Error: Got bad response from server.";
                 Toast.makeText(getApplicationContext(), err, Toast.LENGTH_SHORT).show();
+                searchResult(new JSONArray(), false);
             }
         }
     }
