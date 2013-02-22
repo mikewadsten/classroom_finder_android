@@ -93,6 +93,11 @@ ClassroomListFragment.Callbacks {
             mRefresh.updateRefresh(true);
             new Search().execute("http://mikewadsten.com/test.json");
             return true;
+        case R.id.settings:
+            Intent settingsIntent = new Intent(this,
+                    SettingsActivity.class);
+            startActivityForResult(settingsIntent, 1);
+            return true;
         }
         return false;
     }

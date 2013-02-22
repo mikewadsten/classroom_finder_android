@@ -9,5 +9,8 @@
         <item >St. Paul</item>
     </string-array>
         <string name="menu_refresh">Refresh</string>
+        <string name="preferences_server">Server Settings</string>
+        <string name="preferences_server_url">Server URL</string>
+        <string name="summary_preferences_server_url">Only change if you know what you are doing.</string>
 
 </resources>

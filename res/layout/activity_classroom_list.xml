@@ -4,7 +4,8 @@
     android:name="com.mikewadsten.test_umnclass.ClassroomListFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginLeft="16dp"
-    android:layout_marginRight="16dp"
+    android:layout_marginLeft="4dp"
+    android:layout_marginRight="4dp"
     tools:context=".ClassroomListActivity"
     tools:layout="@android:layout/list_content" />
+
