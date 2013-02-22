@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Classroom Finder</string>
+    <string name="title_classroom_detail">Classroom Detail</string>
+    <string-array name="campus_list">
+        <item >East Bank</item>
+        <item >West Bank</item>
+        <item >St. Paul</item>
+    </string-array>
+        <string name="menu_refresh">Refresh</string>
+
+</resources>
