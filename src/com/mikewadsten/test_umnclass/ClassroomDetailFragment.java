@@ -1,7 +1,8 @@
 package com.mikewadsten.test_umnclass;
 
-import android.os.Bundle;
+import android.app.ActionBar;
 import android.app.Fragment;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -55,7 +56,14 @@ public class ClassroomDetailFragment extends Fragment {
 			((TextView) rootView.findViewById(R.id.classroom_detail))
 					.setText(mItem.getRoomName());
 		}
-
+		
+		ActionBar ab = getActivity().getActionBar();
+		ab.setTitle(mItem.getRoomName());
+		
+		String subtitle = String.format("Open %s until %s",
+		        mItem.getStartTime(), mItem.getEndTime());
+		ab.setSubtitle(subtitle);
+		
 		return rootView;
 	}
 }

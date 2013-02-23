@@ -63,6 +63,7 @@ public class GapAdapter extends ArrayAdapter<Gap> {
                 String.format("%s to %s (%d min)", item.getStartTime(),
                         item.getEndTime(), item.getGapLength()));
         v.setId(position);
+        
         return v;
     }
 
