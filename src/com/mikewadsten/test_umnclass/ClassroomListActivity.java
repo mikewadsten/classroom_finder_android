@@ -17,17 +17,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import android.app.ActionBar;
-import android.app.SearchManager;
 import android.app.ActionBar.OnNavigationListener;
+import android.app.Activity;
 import android.app.FragmentManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.app.Activity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -96,11 +94,7 @@ ClassroomListFragment.Callbacks {
         inf.inflate(R.menu.main_menu, menu);
         
         // Get the search one and set it up?
-        SearchManager sm =
-                (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         SearchView sv = (SearchView) menu.findItem(R.id.search).getActionView();
-        sv.setSearchableInfo(sm.getSearchableInfo(getComponentName()));
-        sv.setIconifiedByDefault(true);
         sv.setQueryHint("Search all rooms");
         return true;
     }
@@ -161,7 +155,8 @@ ClassroomListFragment.Callbacks {
         mRefresh = new RefreshManager();
 
         SpinnerAdapter mSpinnerAdapter = ArrayAdapter.createFromResource(this, R.array.campus_list,
-                android.R.layout.simple_spinner_dropdown_item);
+                R.layout.nav_item);
+                //android.R.layout.simple_dropdown_item_1line);
         OnNavigationListener navListener = new OnNavigationListener() {
             String[] campuses = getResources().getStringArray(R.array.campus_list);
             @Override
