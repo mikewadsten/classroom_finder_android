@@ -33,7 +33,7 @@ public class GapAdapter extends ArrayAdapter<Gap> {
 
     @Override
     public Gap getItem(int position) {
-        return items.get(items.keyAt(position));
+        return ClassroomContent.GAPS.get(position);
     }
 
     @Override
@@ -57,12 +57,12 @@ public class GapAdapter extends ArrayAdapter<Gap> {
             gap = (GapView)v.getTag();
         }
         
-        Gap item = items.get(items.keyAt(position));
+        Gap item = ClassroomContent.GAPS.get(position);
         gap.name.setText(item.getRoomName());
         gap.info.setText(
-                String.format("%s-%s (%d min)", item.getStartTime(),
+                String.format("%s to %s (%d min)", item.getStartTime(),
                         item.getEndTime(), item.getGapLength()));
-        
+        v.setId(position);
         return v;
     }
 

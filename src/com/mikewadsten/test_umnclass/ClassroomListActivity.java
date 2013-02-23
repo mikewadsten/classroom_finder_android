@@ -15,6 +15,7 @@ import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.app.ActionBar;
 import android.app.ActionBar.OnNavigationListener;
@@ -246,6 +247,7 @@ ClassroomListFragment.Callbacks {
             String reply = "";
             try {
                 String url = urls[0];
+                Log.d("Classes Search", String.format("Querying %s", url));
                 DefaultHttpClient client = new DefaultHttpClient();
                 final HttpParams params = client.getParams();
                 // 3 seconds connection timeout
@@ -266,6 +268,7 @@ ClassroomListFragment.Callbacks {
                 return String.format("Error: %s", e.toString());
             }
 
+            Log.d("Classes Search", String.format("Read %d", reply.length()));
             return reply;
         }
 
@@ -275,10 +278,20 @@ ClassroomListFragment.Callbacks {
                 JSONArray obj = new JSONArray(result);
                 searchResult(obj, true);
             } catch (JSONException e) {
-                Log.w("CLA.oPE", result);
-                e.printStackTrace();
-                String err = "Error: Got bad response from server.";
-                Toast.makeText(getApplicationContext(), err, Toast.LENGTH_SHORT).show();
+                String error = e.getMessage();
+                try {
+                    // Errors should be in format {"error": ...}
+                    JSONObject err_obj = new JSONObject(result);
+                    error = String.format("Server error: %s",
+                            err_obj.getString("error"));
+                    Log.e("Class search", error);
+                } catch (Exception e2) {
+                    Log.w("CLA.oPE", result);
+                    e2.printStackTrace();
+                    error = "Error: Got bad response from server.";
+                }
+                Toast.makeText(getApplicationContext(), error,
+                        Toast.LENGTH_LONG).show();
                 searchResult(null, false);
             }
         }

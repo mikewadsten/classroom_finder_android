@@ -31,6 +31,7 @@
         android:layout_marginTop="6dip"
         android:lines="1"
         android:maxLines="1"
+        android:ellipsize="end"
         android:scrollHorizontally="true"
         android:textAppearance="?android:attr/textAppearanceMedium"
     />
@@ -41,6 +42,7 @@
         android:layout_below="@android:id/text1"
         android:lines="1"
         android:maxLines="1"
+        android:ellipsize="end"
         android:scrollHorizontally="true"
         android:layout_alignStart="@android:id/text1"
         android:textAppearance="?android:attr/textAppearanceSmall"
