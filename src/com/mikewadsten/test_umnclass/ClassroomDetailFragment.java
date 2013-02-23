@@ -54,11 +54,11 @@ public class ClassroomDetailFragment extends Fragment {
 		// Show the dummy content as text in a TextView.
 		if (mItem != null) {
 			((TextView) rootView.findViewById(R.id.classroom_detail))
-					.setText(mItem.getRoomName());
+					.setText(mItem.getRoomNumber());
 		}
 		
 		ActionBar ab = getActivity().getActionBar();
-		ab.setTitle(mItem.getRoomName());
+		ab.setTitle(mItem.getReversedName());
 		
 		String subtitle = String.format("Open %s until %s",
 		        mItem.getStartTime(), mItem.getEndTime());

@@ -4,23 +4,15 @@ import org.json.JSONObject;
 
 public class Gap {
     private int mSpaceId, mLength;
-    private String mRoomname;
+    private String mBuilding, mRoomNum;
     private String mStart, mEnd;
     
     public Gap() {
         mSpaceId = 0;
-        mRoomname = "";
+        mBuilding = "";
+        mRoomNum = "";
         mStart = mEnd = "";
         mLength = 0;
-    }
-    
-    public Gap(int spaceId, String roomname,
-                String start, String end, int length) {
-        mSpaceId = spaceId;
-        mRoomname = roomname;
-        mStart = start;
-        mEnd = end;
-        mLength = length;
     }
     
     /**
@@ -43,12 +35,13 @@ public class Gap {
      */
     public boolean loadFromJson(JSONObject in) {
         int id, len;
-        String name;
+        String bldg, num;
         String startTime, endTime;
         try {
             // Pull out fields
             id = in.getInt("spaceID");
-            name = in.getString("roomname");
+            bldg = in.getString("building");
+            num = in.getString("roomnum");
             len = in.getInt("length");
             startTime = in.getString("start");
             endTime = in.getString("end");
@@ -59,8 +52,9 @@ public class Gap {
             return false;
         }
         mSpaceId = id;
+        mBuilding = bldg;
         mLength = len;
-        mRoomname = name;
+        mRoomNum = num;
         mStart = startTime;
         mEnd = endTime;
         
@@ -74,11 +68,38 @@ public class Gap {
         mSpaceId = id;
     }
     
-    public String getRoomName() {
-        return mRoomname;
+    /**
+     * Get the fully qualified room name
+     * @return the concatenation of the building and room number
+     */
+    public String getFullName() {
+        return String.format("%s, Room %s", mBuilding, mRoomNum);
     }
-    public void setRoomName(String name) {
-        mRoomname = name;
+    
+    /**
+     * Like getFullName, just a little shorter
+     * @return something
+     */
+    public String getAbbrev() {
+        return String.format("%s %s", mBuilding, mRoomNum);
+    }
+    
+    public String getReversedName() {
+        return String.format("%s %s", mRoomNum, mBuilding);
+    }
+    
+    public String getBuilding() {
+        return mBuilding;
+    }
+    public void setBuilding(String building) {
+        mBuilding = building;
+    }
+    
+    public String getRoomNumber() {
+        return mRoomNum;
+    }
+    public void setRoomNumber(String num) {
+        mRoomNum = num;
     }
     
     public String getStartTime() {

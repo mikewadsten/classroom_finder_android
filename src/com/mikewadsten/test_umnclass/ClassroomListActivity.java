@@ -106,10 +106,7 @@ ClassroomListFragment.Callbacks {
         switch (item.getItemId()) {
         case R.id.refresh:
             mRefresh.updateRefresh(true);
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-            // Shouldn't need the default since the preference does exist. But whatever.
-            String defaultServer = getResources().getString(R.string.default_server);
-            new Search().execute(prefs.getString("pref_server_url", defaultServer));
+            new Search().execute("?campus=stpaul");
             return true;
         case R.id.settings:
             Intent settingsIntent = new Intent(this,
@@ -164,6 +161,8 @@ ClassroomListFragment.Callbacks {
             @Override
             public boolean onNavigationItemSelected(int itemPosition,
                     long itemId) {
+                mRefresh.updateRefresh(true);
+                new Search().execute("?campus=east");
                 Log.d("CLASSES-nav", String.format("Selected: %s", campuses[itemPosition]));
                 return true;
             }
@@ -178,26 +177,26 @@ ClassroomListFragment.Callbacks {
      */
     @Override
     public void onItemSelected(int id) {
-        if (mTwoPane) {
-            // In two-pane mode, show the detail view in this activity by
-            // adding or replacing the detail fragment using a
-            // fragment transaction.
-            Bundle arguments = new Bundle();
-            arguments.putInt(ClassroomDetailFragment.ARG_ITEM_ID, id);
-            ClassroomDetailFragment fragment = new ClassroomDetailFragment();
-            fragment.setArguments(arguments);
-            getFragmentManager().beginTransaction()
-            .replace(R.id.classroom_detail_container, fragment)
-            .commit();
-
-        } else {
+//        if (mTwoPane) {
+//            // In two-pane mode, show the detail view in this activity by
+//            // adding or replacing the detail fragment using a
+//            // fragment transaction.
+//            Bundle arguments = new Bundle();
+//            arguments.putInt(ClassroomDetailFragment.ARG_ITEM_ID, id);
+//            ClassroomDetailFragment fragment = new ClassroomDetailFragment();
+//            fragment.setArguments(arguments);
+//            getFragmentManager().beginTransaction()
+//            .replace(R.id.classroom_detail_container, fragment)
+//            .commit();
+//
+//        } else {
             // In single-pane mode, simply start the detail activity
             // for the selected item ID.
             Intent detailIntent = new Intent(this,
                     ClassroomDetailActivity.class);
             detailIntent.putExtra(ClassroomDetailFragment.ARG_ITEM_ID, id);
             startActivity(detailIntent);
-        }
+//        }
     }
 
     private void searchResult(JSONArray arr, boolean success) {
@@ -253,7 +252,11 @@ ClassroomListFragment.Callbacks {
             SearchResult retval = new SearchResult();
             String reply = "";
             try {
-                String url = urls[0];
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ClassroomListActivity.this);
+                // Shouldn't need the default since the preference does exist. But whatever.
+                String defaultServer = getResources().getString(R.string.default_server);
+                String baseUrl = prefs.getString("pref_server_url", defaultServer);
+                String url = baseUrl.concat(urls[0]);
                 Log.d("Classes Search", String.format("Querying %s", url));
                 DefaultHttpClient client = new DefaultHttpClient();
                 final HttpParams params = client.getParams();

@@ -1,8 +1,11 @@
 package com.mikewadsten.test_umnclass;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.view.View;
+
+import com.koushikdutta.widgets.ActivityBase;
+import com.koushikdutta.widgets.ListItem;
 
 /**
  * An activity representing a single Classroom detail screen. This activity is
@@ -13,12 +16,12 @@ import android.view.MenuItem;
  * This activity is mostly just a 'shell' activity containing nothing more than
  * a {@link ClassroomDetailFragment}.
  */
-public class ClassroomDetailActivity extends Activity {
+public class ClassroomDetailActivity extends ActivityBase {
+    private Gap mGap;
 
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_classroom_detail);
+	public void onCreate(Bundle savedInstanceState, View view) {
+		super.onCreate(savedInstanceState, view);
 
 		// Show the Up button in the action bar.
 		getActionBar().setDisplayHomeAsUpEnabled(true);
@@ -33,17 +36,16 @@ public class ClassroomDetailActivity extends Activity {
 		// http://developer.android.com/guide/components/fragments.html
 		//
 		if (savedInstanceState == null) {
-			// Create the detail fragment and add it to the activity
-			// using a fragment transaction.
-			Bundle arguments = new Bundle();
-			arguments.putInt(
-					ClassroomDetailFragment.ARG_ITEM_ID,
-					getIntent().getIntExtra(
-							ClassroomDetailFragment.ARG_ITEM_ID, -1));
-			ClassroomDetailFragment fragment = new ClassroomDetailFragment();
-			fragment.setArguments(arguments);
-			getFragmentManager().beginTransaction()
-					.add(R.id.classroom_detail_container, fragment).commit();
+			int itemId = getIntent().getIntExtra(
+			        ClassroomDetailFragment.ARG_ITEM_ID, -1);
+			mGap = ClassroomContent.GAPMAP.get(itemId);
+			if (mGap == null)
+			    mGap = new Gap();
+//			getFragment().getListView().setPadding(20, 20, 20, 20);
+			addItem("Location", new ListItem(getFragment(), mGap.getBuilding(), "Building"));
+			addItem("Location", new ListItem(getFragment(), mGap.getRoomNumber(), "Room"));
+			addItem("Availability", new ListItem(getFragment(), mGap.getStartTime(), "Start"));
+			addItem("Availability", new ListItem(getFragment(), mGap.getEndTime(), "End"));
 		}
 	}
 
