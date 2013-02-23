@@ -11,12 +11,16 @@ import java.util.Locale;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.json.JSONArray;
 import org.json.JSONException;
 
 import android.app.ActionBar;
+import android.app.SearchManager;
 import android.app.ActionBar.OnNavigationListener;
 import android.app.FragmentManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -30,6 +34,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
+import android.widget.SearchView;
 import android.widget.SpinnerAdapter;
 import android.widget.Toast;
 
@@ -89,6 +94,14 @@ ClassroomListFragment.Callbacks {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inf = getMenuInflater();
         inf.inflate(R.menu.main_menu, menu);
+        
+        // Get the search one and set it up?
+        SearchManager sm =
+                (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        SearchView sv = (SearchView) menu.findItem(R.id.search).getActionView();
+        sv.setSearchableInfo(sm.getSearchableInfo(getComponentName()));
+        sv.setIconifiedByDefault(true);
+        sv.setQueryHint("Search all rooms");
         return true;
     }
 
@@ -239,6 +252,11 @@ ClassroomListFragment.Callbacks {
             try {
                 String url = urls[0];
                 DefaultHttpClient client = new DefaultHttpClient();
+                final HttpParams params = client.getParams();
+                // 3 seconds connection timeout
+                HttpConnectionParams.setConnectionTimeout(params, 3000);
+                // 10 seconds data timeout
+                HttpConnectionParams.setSoTimeout(params, 10000);
                 HttpGet get = new HttpGet(url);
                 HttpResponse ex = client.execute(get);
                 InputStream is = ex.getEntity().getContent();
