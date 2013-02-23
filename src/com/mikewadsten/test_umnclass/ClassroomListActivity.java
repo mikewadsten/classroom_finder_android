@@ -3,6 +3,7 @@ package com.mikewadsten.test_umnclass;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.SocketTimeoutException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -239,11 +240,17 @@ ClassroomListFragment.Callbacks {
         
         mRefresh.updateRefresh(false);
     }
+    
+    protected static class SearchResult {
+        String result = "";
+        boolean timeout = false;
+    }
 
-    private class Search extends AsyncTask<String, Void, String> {
+    private class Search extends AsyncTask<String, Void, SearchResult> {
 
         @Override
-        protected String doInBackground(String... urls) {
+        protected SearchResult doInBackground(String... urls) {
+            SearchResult retval = new SearchResult();
             String reply = "";
             try {
                 String url = urls[0];
@@ -263,37 +270,54 @@ ClassroomListFragment.Callbacks {
                 while ((s = buf.readLine()) != null) {
                     reply += s;
                 }
+
+                Log.d("Classes Search", String.format("Read %d",
+                                                    reply.length()));
+                retval.result = reply;
+            } catch (SocketTimeoutException soe) {
+                Log.e("Classes Search", "Socket timed out");
+                retval.result = "Connection timed out while contacting server.";
+                retval.timeout = true;
             } catch (Exception e) {
                 e.printStackTrace();
-                return String.format("Error: %s", e.toString());
+                retval.result = String.format("Error: %s", e.getMessage());
             }
 
-            Log.d("Classes Search", String.format("Read %d", reply.length()));
-            return reply;
+            return retval;
         }
 
         @Override
-        protected void onPostExecute(String result) {
-            try {
-                JSONArray obj = new JSONArray(result);
-                searchResult(obj, true);
-            } catch (JSONException e) {
-                String error = e.getMessage();
-                try {
-                    // Errors should be in format {"error": ...}
-                    JSONObject err_obj = new JSONObject(result);
-                    error = String.format("Server error: %s",
-                            err_obj.getString("error"));
-                    Log.e("Class search", error);
-                } catch (Exception e2) {
-                    Log.w("CLA.oPE", result);
-                    e2.printStackTrace();
-                    error = "Error: Got bad response from server.";
-                }
-                Toast.makeText(getApplicationContext(), error,
-                        Toast.LENGTH_LONG).show();
-                searchResult(null, false);
+        protected void onPostExecute(SearchResult result) {
+            String error;
+            
+            if (result.timeout) {
+                error = result.result; // nice way of putting it
             }
+            else { // parse the result or something
+                try {
+                    JSONArray obj = new JSONArray(result.result);
+                    searchResult(obj, true);
+                    return;
+                } catch (JSONException e) {
+                    error = e.getMessage();
+                    try {
+                        // Errors should be in format {"error": ...}
+                        JSONObject err_obj = new JSONObject(result.result);
+                        error = String.format("Server error: %s",
+                                err_obj.getString("error"));
+                        Log.e("Class search", error);
+                    } catch (Exception e2) {
+                        Log.w("CLA.oPE", result.result);
+                        e2.printStackTrace();
+                        error = "Error: Got bad response from server.";
+                    }
+                }
+            }
+            
+            // Show a Toast to indicate what's up
+            Toast.makeText(getApplicationContext(), error,
+                    Toast.LENGTH_SHORT).show();
+            searchResult(null, false);
         }
     }
 }
