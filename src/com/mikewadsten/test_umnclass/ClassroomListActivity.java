@@ -3,29 +3,33 @@ package com.mikewadsten.test_umnclass;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import android.app.ActionBar;
 import android.app.ActionBar.OnNavigationListener;
+import android.app.FragmentManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.support.v4.app.FragmentActivity;
+import android.app.Activity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.SpinnerAdapter;
 import android.widget.Toast;
 
@@ -45,7 +49,7 @@ import android.widget.Toast;
  * {@link ClassroomListFragment.Callbacks} interface to listen for item
  * selections.
  */
-public class ClassroomListActivity extends FragmentActivity implements
+public class ClassroomListActivity extends Activity implements
 ClassroomListFragment.Callbacks {
     
     private class RefreshManager {
@@ -94,7 +98,9 @@ ClassroomListFragment.Callbacks {
         case R.id.refresh:
             mRefresh.updateRefresh(true);
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-            new Search().execute(prefs.getString("pref_server_url", "http://mikewadsten.com/test.json"));
+            // Shouldn't need the default since the preference does exist. But whatever.
+            String defaultServer = getResources().getString(R.string.default_server);
+            new Search().execute(prefs.getString("pref_server_url", defaultServer));
             return true;
         case R.id.settings:
             Intent settingsIntent = new Intent(this,
@@ -128,7 +134,7 @@ ClassroomListFragment.Callbacks {
 
             // In two-pane mode, list items should be given the
             // 'activated' state when touched.
-            ((ClassroomListFragment) getSupportFragmentManager()
+            ((ClassroomListFragment) getFragmentManager()
                     .findFragmentById(R.id.classroom_list))
                     .setActivateOnItemClick(true);
         }
@@ -138,6 +144,7 @@ ClassroomListFragment.Callbacks {
         ActionBar bar = getActionBar();
         bar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
         
+        bar.setSubtitle(null);
         mRefresh = new RefreshManager();
 
         SpinnerAdapter mSpinnerAdapter = ArrayAdapter.createFromResource(this, R.array.campus_list,
@@ -160,16 +167,16 @@ ClassroomListFragment.Callbacks {
      * that the item with the given ID was selected.
      */
     @Override
-    public void onItemSelected(String id) {
+    public void onItemSelected(int id) {
         if (mTwoPane) {
             // In two-pane mode, show the detail view in this activity by
             // adding or replacing the detail fragment using a
             // fragment transaction.
             Bundle arguments = new Bundle();
-            arguments.putString(ClassroomDetailFragment.ARG_ITEM_ID, id);
+            arguments.putInt(ClassroomDetailFragment.ARG_ITEM_ID, id);
             ClassroomDetailFragment fragment = new ClassroomDetailFragment();
             fragment.setArguments(arguments);
-            getSupportFragmentManager().beginTransaction()
+            getFragmentManager().beginTransaction()
             .replace(R.id.classroom_detail_container, fragment)
             .commit();
 
@@ -186,48 +193,38 @@ ClassroomListFragment.Callbacks {
     private void searchResult(JSONArray arr, boolean success) {
         if (success) {
             // We can't update data if we got nothing back.
-            ArrayList<JSONObject> objs = new ArrayList<JSONObject>();
+            ArrayList<Gap> gaps = new ArrayList<Gap>();
+            
+            final int len = arr.length();
             try {
-                int len = arr.length();
                 for (int i = 0; i < len; i++) {
                     try {
-                        objs.add(arr.getJSONObject(i));
+                        gaps.add(new Gap(arr.getJSONObject(i)));
                     } catch (Exception e) {
+                        // Well that sucks
+                        Log.e("Search result", e.getMessage());
                     }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
-    
-            ClassroomContent.ITEMS.clear();
-            ClassroomContent.ITEM_MAP.clear();
-    
-            for (int i = 0; i < objs.size(); i++) {
-                JSONObject o = objs.get(i);
-                String content = (String) o.keys().next();
-                ClassroomContent.addItem(new ClassroomContent.Classroom(Integer.toString(i), content));
-            }
             
-            try {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        ClassroomListFragment f = (ClassroomListFragment) getSupportFragmentManager().findFragmentById(R.id.classroom_list);
-                        if (f == null) {
-                            Log.e("Classes.update", "list fragment null");
-                            return;
-                        }
-                        @SuppressWarnings("rawtypes") // Silly typecasting...
-                        ArrayAdapter a = (ArrayAdapter)f.getListAdapter();
-                        if (a == null) {
-                            Log.e("Classes.update", "list adapter null");
-                            return;
-                        }
-                        a.notifyDataSetChanged();
-                    }
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
+            if (gaps.size() > 0) {
+                // Wipe out what's there
+                ClassroomContent.clearItems();
+                ClassroomContent.addAll(gaps);
+                
+                // Notify the adapter that the data has changed
+                FragmentManager fm = getFragmentManager();
+                ClassroomListFragment frag =
+                        (ClassroomListFragment)fm.findFragmentById(R.id.classroom_list);
+                ((BaseAdapter) frag.getListAdapter()).notifyDataSetChanged();
+                
+                ActionBar bar = getActionBar();
+                SimpleDateFormat fmt = new SimpleDateFormat("h:mm a", Locale.US);
+                bar.setSubtitle(String.format("Updated at %s", fmt.format(new Date())));
+            } else {
+                Log.i("Search result", "Got data, but nothing was parsed from it.");
             }
         }
         
@@ -256,8 +253,6 @@ ClassroomListFragment.Callbacks {
                 return String.format("Error: %s", e.toString());
             }
 
-            Log.d("Search result", String.format("%s", reply));
-
             return reply;
         }
 
@@ -265,14 +260,13 @@ ClassroomListFragment.Callbacks {
         protected void onPostExecute(String result) {
             try {
                 JSONArray obj = new JSONArray(result);
-//                Toast.makeText(getApplicationContext(), obj.toString(2), Toast.LENGTH_SHORT).show();
                 searchResult(obj, true);
             } catch (JSONException e) {
                 Log.w("CLA.oPE", result);
                 e.printStackTrace();
                 String err = "Error: Got bad response from server.";
                 Toast.makeText(getApplicationContext(), err, Toast.LENGTH_SHORT).show();
-                searchResult(new JSONArray(), false);
+                searchResult(null, false);
             }
         }
     }

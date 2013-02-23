@@ -1,9 +1,10 @@
 package com.mikewadsten.test_umnclass;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
+
+import android.util.SparseArray;
 
 /**
  * Helper class for providing sample content for user interfaces created by
@@ -16,40 +17,20 @@ public class ClassroomContent {
 	/**
 	 * An array of sample (dummy) items.
 	 */
-	public static List<Classroom> ITEMS = new ArrayList<Classroom>();
+	public static List<Gap> GAPS = new ArrayList<Gap>();
+	public static SparseArray<Gap> GAPMAP = new SparseArray<Gap>();
 
-	/**
-	 * A map of sample (dummy) items, by ID.
-	 */
-	public static Map<String, Classroom> ITEM_MAP = new HashMap<String, Classroom>();
-
-//	static {
-//		// Add 3 sample items.
-//		addItem(new Classroom("1", "Item 1"));
-//		addItem(new Classroom("2", "Item 2"));
-//		addItem(new Classroom("3", "Item 3"));
-//	}
-
-	public static void addItem(Classroom item) {
-		ITEMS.add(item);
-		ITEM_MAP.put(item.id, item);
+	public static void addItem(Gap item) {
+		GAPS.add(item);
+		GAPMAP.put(item.getSpaceId(), item);
 	}
-
-	/**
-	 * A dummy item representing a piece of content.
-	 */
-	public static class Classroom {
-		public String id;
-		public String content;
-
-		public Classroom(String id, String content) {
-			this.id = id;
-			this.content = content;
-		}
-
-		@Override
-		public String toString() {
-			return content;
-		}
+	
+	public static void addAll(Collection<Gap> gaps) {
+	    for (Gap g : gaps) addItem(g);
+	}
+	
+	public static void clearItems() {
+	    GAPS.clear();
+	    GAPMAP.clear();
 	}
 }

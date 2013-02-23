@@ -12,5 +12,8 @@
         <string name="preferences_server">Server Settings</string>
         <string name="preferences_server_url">Server URL</string>
         <string name="summary_preferences_server_url">Only change if you know what you are doing.</string>
+        <string name="menu_search">Search</string>
+        <string name="menu_settings">Settings</string>
+        <string name="default_server">http://mikewadsten.com/test.json</string>
 
 </resources>

@@ -1,8 +1,8 @@
 package com.mikewadsten.test_umnclass;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NavUtils;
 import android.view.MenuItem;
 
@@ -15,7 +15,7 @@ import android.view.MenuItem;
  * This activity is mostly just a 'shell' activity containing nothing more than
  * a {@link ClassroomDetailFragment}.
  */
-public class ClassroomDetailActivity extends FragmentActivity {
+public class ClassroomDetailActivity extends Activity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -38,13 +38,13 @@ public class ClassroomDetailActivity extends FragmentActivity {
 			// Create the detail fragment and add it to the activity
 			// using a fragment transaction.
 			Bundle arguments = new Bundle();
-			arguments.putString(
+			arguments.putInt(
 					ClassroomDetailFragment.ARG_ITEM_ID,
-					getIntent().getStringExtra(
-							ClassroomDetailFragment.ARG_ITEM_ID));
+					getIntent().getIntExtra(
+							ClassroomDetailFragment.ARG_ITEM_ID, -1));
 			ClassroomDetailFragment fragment = new ClassroomDetailFragment();
 			fragment.setArguments(arguments);
-			getSupportFragmentManager().beginTransaction()
+			getFragmentManager().beginTransaction()
 					.add(R.id.classroom_detail_container, fragment).commit();
 		}
 	}

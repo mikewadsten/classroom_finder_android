@@ -2,9 +2,8 @@ package com.mikewadsten.test_umnclass;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.support.v4.app.ListFragment;
+import android.app.ListFragment;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 
@@ -45,7 +44,7 @@ public class ClassroomListFragment extends ListFragment {
 		/**
 		 * Callback for when an item has been selected.
 		 */
-		public void onItemSelected(String id);
+		public void onItemSelected(int id);
 	}
 
 	/**
@@ -54,7 +53,7 @@ public class ClassroomListFragment extends ListFragment {
 	 */
 	private static Callbacks sDummyCallbacks = new Callbacks() {
 		@Override
-		public void onItemSelected(String id) {
+		public void onItemSelected(int id) {
 		}
 	};
 
@@ -70,9 +69,11 @@ public class ClassroomListFragment extends ListFragment {
 		super.onCreate(savedInstanceState);
 
 		// TODO: replace with a real list adapter.
-		setListAdapter(new ArrayAdapter<ClassroomContent.Classroom>(getActivity(),
-				android.R.layout.simple_list_item_activated_1,
-				android.R.id.text1, ClassroomContent.ITEMS));
+//		GapAdapter adapter = new GapAdapter(getActivity(), R.layout.class_list_entry, ClassroomContent.GAPMAP);
+		GapAdapter adapter = new GapAdapter(getActivity(),
+		        R.layout.classlist_item,
+		        ClassroomContent.GAPMAP);
+		setListAdapter(adapter);
 	}
 
 	@Override
@@ -87,8 +88,7 @@ public class ClassroomListFragment extends ListFragment {
 		}
 
 		setEmptyText("Classes not loaded yet.");
-        // Fast scroll makes life easier
-        getListView().setFastScrollEnabled(true);
+        getListView().setScrollBarStyle(View.SCROLLBARS_OUTSIDE_INSET);
 	}
 
 	@Override
@@ -119,7 +119,8 @@ public class ClassroomListFragment extends ListFragment {
 
 		// Notify the active callbacks interface (the activity, if the
 		// fragment is attached to one) that an item has been selected.
-		mCallbacks.onItemSelected(ClassroomContent.ITEMS.get(position).id);
+		Gap selected = ClassroomContent.GAPS.get(position);
+		mCallbacks.onItemSelected(selected.getSpaceId());
 	}
 
     @Override

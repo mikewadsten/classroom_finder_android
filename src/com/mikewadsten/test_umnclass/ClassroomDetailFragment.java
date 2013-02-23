@@ -1,7 +1,7 @@
 package com.mikewadsten.test_umnclass;
 
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,7 +23,7 @@ public class ClassroomDetailFragment extends Fragment {
 	/**
 	 * The dummy content this fragment is presenting.
 	 */
-	private ClassroomContent.Classroom mItem;
+	private Gap mItem;
 
 	/**
 	 * Mandatory empty constructor for the fragment manager to instantiate the
@@ -40,8 +40,7 @@ public class ClassroomDetailFragment extends Fragment {
 			// Load the dummy content specified by the fragment
 			// arguments. In a real-world scenario, use a Loader
 			// to load content from a content provider.
-			mItem = ClassroomContent.ITEM_MAP.get(getArguments().getString(
-					ARG_ITEM_ID));
+			mItem = ClassroomContent.GAPMAP.get(getArguments().getInt(ARG_ITEM_ID));
 		}
 	}
 
@@ -54,7 +53,7 @@ public class ClassroomDetailFragment extends Fragment {
 		// Show the dummy content as text in a TextView.
 		if (mItem != null) {
 			((TextView) rootView.findViewById(R.id.classroom_detail))
-					.setText(mItem.content);
+					.setText(mItem.getRoomName());
 		}
 
 		return rootView;
