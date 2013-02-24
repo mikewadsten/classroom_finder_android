@@ -3,7 +3,6 @@ package com.mikewadsten.test_umnclass;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.support.v4.app.Fragment;
 import android.view.View;
 
 import com.koushikdutta.widgets.ActivityBaseFragment;

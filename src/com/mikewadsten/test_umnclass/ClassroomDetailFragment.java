@@ -13,16 +13,13 @@ import org.apache.http.params.HttpParams;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.app.ActionBar;
 import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
 import android.view.View;
 
 import com.koushikdutta.widgets.ActivityBaseFragment;
-import com.mikewadsten.test_umnclass.WebUtil.SearchURL;
 
 
 /**
@@ -144,6 +141,7 @@ public class ClassroomDetailFragment extends ActivityBaseFragment {
                 retval.result = "Connection timed out while contacting server.";
                 retval.timeout = true;
             } catch (Exception e) {
+                Log.e("Classes Search", e.getMessage());
                 e.printStackTrace();
                 retval.result = String.format("Error: %s", e.getMessage());
             }
