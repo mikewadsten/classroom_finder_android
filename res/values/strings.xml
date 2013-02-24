@@ -39,5 +39,6 @@
                 <item >http://brontasaur.us/spaceinfo.json</item>
                 <item >http://mikewadsten.com/classroom_finder/space.cgi</item>
             </string-array>
+            <string name="empty_search_result">No matches</string>
 
 </resources>

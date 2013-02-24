@@ -20,6 +20,8 @@ import org.json.JSONObject;
 
 import android.app.ActionBar;
 import android.app.ActionBar.OnNavigationListener;
+import android.app.SearchManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -83,7 +85,9 @@ public class MainActivity extends ActivityBase {
         inflater.inflate(R.menu.main_menu, menu);
 
         // Get the search view and set it up correctly.
+        SearchManager sm = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         SearchView sv = (SearchView) menu.findItem(R.id.search).getActionView();
+        sv.setSearchableInfo(sm.getSearchableInfo(getComponentName()));
         sv.setQueryHint("Search all rooms");
         return true;
     }
@@ -284,29 +288,28 @@ public class MainActivity extends ActivityBase {
 
         @Override
         protected void onPostExecute(SearchResult result) {
-            String error;
+            String error = "Error: Got bad response from server.";
             
             if (result.timeout) {
                 error = result.result; // nice way of putting it
             }
             else { // parse the result or something
                 try {
-                    JSONArray obj = new JSONArray(result.result);
-                    searchResult(obj, true);
-                    return;
+                    JSONObject obj = new JSONObject(result.result);
+                    if (obj.has("error")) {
+                        error = String.format("Server error: %s",
+                                obj.getString("error"));
+                        Log.e("Class search", error);
+                    }
+                    else if (obj.has("items")) {
+                        searchResult(obj.getJSONArray("items"), true);
+                        return;
+                    }
                 } catch (JSONException e) {
                     error = e.getMessage();
-                    try {
-                        // Errors should be in format {"error": ...}
-                        JSONObject err_obj = new JSONObject(result.result);
-                        error = String.format("Server error: %s",
-                                err_obj.getString("error"));
-                        Log.e("Class search", error);
-                    } catch (Exception e2) {
-                        Log.w("CLA.oPE", result.result);
-                        e2.printStackTrace();
-                        error = "Error: Got bad response from server.";
-                    }
+                    Log.w("CLA.oPE", error);
+                    e.printStackTrace();
+                    error = String.format("Error: %s", error);
                 }
             }
             

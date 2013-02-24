@@ -16,25 +16,11 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name="com.mikewadsten.test_umnclass.ClassroomListActivity"
-            android:label="@string/app_name"
-            android:launchMode="singleTop"
-            android:uiOptions="splitActionBarWhenNarrow" >
-        </activity>
-        <activity
-            android:name="com.mikewadsten.test_umnclass.ClassroomDetailActivity"
-            android:label="@string/title_classroom_detail"
-            android:parentActivityName=".ClassroomListActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".ClassroomListActivity" />
-        </activity>
-        <activity
-            android:name="com.mikewadsten.test_umnclass.SettingsActivity"
+            android:name=".SettingsActivity"
             android:label="Settings" >
         </activity>
         <activity
-            android:name="MainActivity"
+            android:name=".MainActivity"
             android:uiOptions="splitActionBarWhenNarrow"
             android:label="@string/app_name" android:configChanges="keyboardHidden|orientation|screenSize">
             <intent-filter>
@@ -42,6 +28,15 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <meta-data android:name="android.app.default_searchable"
+                   android:value=".SearchActivity" />
+        </activity>
+        <activity android:name=".SearchActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+            <meta-data android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
         </activity>
     </application>
 
