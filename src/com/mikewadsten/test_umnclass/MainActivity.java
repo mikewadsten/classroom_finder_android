@@ -252,6 +252,12 @@ public class MainActivity extends ActivityBase {
                 // 10 seconds data timeout
                 HttpConnectionParams.setSoTimeout(params, 10000);
                 HttpGet get = new HttpGet(url);
+                // tell the server this is an XHR. I'm working on modifying the Flask app
+                // to use 'jsonify', which only produces condensed JSON output if the request
+                // specifies it is an XHR. condensed output is much much better and quicker to
+                // pull down than non-condensed ( json.dumps(_, indent=2) ) so we want to make
+                // sure that what we get (no pun intended) is as small as we can get it
+                get.addHeader('X-Requested-With', 'XMLHttpRequest');
                 HttpResponse ex = client.execute(get);
                 InputStream is = ex.getEntity().getContent();
 
