@@ -20,23 +20,27 @@ import org.json.JSONObject;
 
 import android.app.ActionBar;
 import android.app.ActionBar.OnNavigationListener;
-import android.app.Activity;
-import android.app.FragmentManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
+import android.widget.LinearLayout;
 import android.widget.SearchView;
 import android.widget.SpinnerAdapter;
 import android.widget.Toast;
+
+import com.koushikdutta.widgets.ActivityBaseFragment;
 
 /**
  * An activity representing a list of Classrooms. This activity has different
@@ -54,7 +58,7 @@ import android.widget.Toast;
  * {@link ClassroomListFragment.Callbacks} interface to listen for item
  * selections.
  */
-public class ClassroomListActivity extends Activity implements
+public class ClassroomListActivity extends FragmentActivity implements
 ClassroomListFragment.Callbacks {
     
     private class RefreshManager {
@@ -140,9 +144,13 @@ ClassroomListFragment.Callbacks {
 
             // In two-pane mode, list items should be given the
             // 'activated' state when touched.
-            ((ClassroomListFragment) getFragmentManager()
-                    .findFragmentById(R.id.classroom_list))
-                    .setActivateOnItemClick(true);
+            ClassroomListFragment frag =
+                    (ClassroomListFragment) getSupportFragmentManager()
+                    .findFragmentById(R.id.classroom_list);
+
+            frag.setActivateOnItemClick(true);
+            
+            setDetailWeight(2);
         }
 
         mHandler = new Handler();
@@ -177,26 +185,30 @@ ClassroomListFragment.Callbacks {
      */
     @Override
     public void onItemSelected(int id) {
-//        if (mTwoPane) {
-//            // In two-pane mode, show the detail view in this activity by
-//            // adding or replacing the detail fragment using a
-//            // fragment transaction.
-//            Bundle arguments = new Bundle();
-//            arguments.putInt(ClassroomDetailFragment.ARG_ITEM_ID, id);
-//            ClassroomDetailFragment fragment = new ClassroomDetailFragment();
-//            fragment.setArguments(arguments);
-//            getFragmentManager().beginTransaction()
-//            .replace(R.id.classroom_detail_container, fragment)
-//            .commit();
-//
-//        } else {
+        if (mTwoPane) {
+            // In two-pane mode, show the detail view in this activity by
+            // adding or replacing the detail fragment using a
+            // fragment transaction.
+            ActivityBaseFragment fragment = new ActivityBaseFragment();
+            WidgetUtils.buildGapDetails(fragment, id);
+            getSupportFragmentManager().beginTransaction()
+            .replace(R.id.classroom_detail_container, fragment)
+            .commit();
+            setDetailWeight(2);
+        } else {
             // In single-pane mode, simply start the detail activity
             // for the selected item ID.
             Intent detailIntent = new Intent(this,
                     ClassroomDetailActivity.class);
             detailIntent.putExtra(ClassroomDetailFragment.ARG_ITEM_ID, id);
             startActivity(detailIntent);
-//        }
+        }
+    }
+    
+    private void setDetailWeight(float weight) {
+        LayoutParams p = new LinearLayout.LayoutParams(0,
+                LayoutParams.MATCH_PARENT, weight);
+        findViewById(R.id.classroom_detail_container).setLayoutParams(p);
     }
 
     private void searchResult(JSONArray arr, boolean success) {
@@ -224,7 +236,7 @@ ClassroomListFragment.Callbacks {
                 ClassroomContent.addAll(gaps);
                 
                 // Notify the adapter that the data has changed
-                FragmentManager fm = getFragmentManager();
+                FragmentManager fm = getSupportFragmentManager();
                 ClassroomListFragment frag =
                         (ClassroomListFragment)fm.findFragmentById(R.id.classroom_list);
                 ((BaseAdapter) frag.getListAdapter()).notifyDataSetChanged();

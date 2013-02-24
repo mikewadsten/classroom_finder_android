@@ -22,7 +22,7 @@ public class ClassroomContent {
 
 	public static void addItem(Gap item) {
 		GAPS.add(item);
-		GAPMAP.put(item.getSpaceId(), item);
+		GAPMAP.put(item.getGapId(), item);
 	}
 	
 	public static void addAll(Collection<Gap> gaps) {

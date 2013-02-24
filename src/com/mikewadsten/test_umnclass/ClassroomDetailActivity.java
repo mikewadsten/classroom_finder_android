@@ -5,7 +5,6 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.koushikdutta.widgets.ActivityBase;
-import com.koushikdutta.widgets.ListItem;
 
 /**
  * An activity representing a single Classroom detail screen. This activity is
@@ -17,8 +16,6 @@ import com.koushikdutta.widgets.ListItem;
  * a {@link ClassroomDetailFragment}.
  */
 public class ClassroomDetailActivity extends ActivityBase {
-    private Gap mGap;
-
 	@Override
 	public void onCreate(Bundle savedInstanceState, View view) {
 		super.onCreate(savedInstanceState, view);
@@ -38,14 +35,7 @@ public class ClassroomDetailActivity extends ActivityBase {
 		if (savedInstanceState == null) {
 			int itemId = getIntent().getIntExtra(
 			        ClassroomDetailFragment.ARG_ITEM_ID, -1);
-			mGap = ClassroomContent.GAPMAP.get(itemId);
-			if (mGap == null)
-			    mGap = new Gap();
-//			getFragment().getListView().setPadding(20, 20, 20, 20);
-			addItem("Location", new ListItem(getFragment(), mGap.getBuilding(), "Building"));
-			addItem("Location", new ListItem(getFragment(), mGap.getRoomNumber(), "Room"));
-			addItem("Availability", new ListItem(getFragment(), mGap.getStartTime(), "Start"));
-			addItem("Availability", new ListItem(getFragment(), mGap.getEndTime(), "End"));
+			WidgetUtils.buildGapDetails(getFragment(), itemId);
 		}
 	}
 

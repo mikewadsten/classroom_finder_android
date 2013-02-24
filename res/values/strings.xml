@@ -10,10 +10,18 @@
     </string-array>
         <string name="menu_refresh">Refresh</string>
         <string name="preferences_server">Server Settings</string>
-        <string name="preferences_server_url">Server URL</string>
+        <string name="preferences_search_url">Server Main URL</string>
         <string name="summary_preferences_server_url">Only change if you know what you are doing.</string>
         <string name="menu_search">Search</string>
         <string name="menu_settings">Settings</string>
-        <string name="default_server">http://mikewadsten.com/test.json</string>
+        <string name="default_server">http://mikewadsten.com/classroom_finder/app.cgi</string>
+        <string name="empty_class_list">Refresh needed</string>
+        <string-array name="campus_key_list">
+            <item >east</item>
+            <item >west</item>
+            <item >stpaul</item>
+        </string-array>
+            <string name="preferences_info_url">Server Space Info URL</string>
+            <string name="default_server_space">http://mikewadsten.com/classroom_finder/space.cgi</string>
 
 </resources>

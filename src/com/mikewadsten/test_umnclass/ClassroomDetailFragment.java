@@ -1,30 +1,42 @@
 package com.mikewadsten.test_umnclass;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.SocketTimeoutException;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.ActionBar;
-import android.app.Fragment;
+import android.content.res.Configuration;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.view.LayoutInflater;
+import android.util.Log;
+import android.view.Menu;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
+
+import com.koushikdutta.widgets.ActivityBaseFragment;
+import com.mikewadsten.test_umnclass.WebUtil.SearchURL;
 
 
 /**
- * A fragment representing a single Classroom detail screen. This fragment is
- * either contained in a {@link ClassroomListActivity} in two-pane mode (on
- * tablets) or a {@link ClassroomDetailActivity} on handsets.
+ * Fragment to present classroom opening details.
  */
-public class ClassroomDetailFragment extends Fragment {
+public class ClassroomDetailFragment extends ActivityBaseFragment {
 	/**
 	 * The fragment argument representing the item ID that this fragment
 	 * represents.
 	 */
 	public static final String ARG_ITEM_ID = "item_id";
+	
+	private Gap mGap;
 
-	/**
-	 * The dummy content this fragment is presenting.
-	 */
-	private Gap mItem;
 
 	/**
 	 * Mandatory empty constructor for the fragment manager to instantiate the
@@ -32,38 +44,141 @@ public class ClassroomDetailFragment extends Fragment {
 	 */
 	public ClassroomDetailFragment() {
 	}
-
+	
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-
-		if (getArguments().containsKey(ARG_ITEM_ID)) {
-			// Load the dummy content specified by the fragment
-			// arguments. In a real-world scenario, use a Loader
-			// to load content from a content provider.
-			mItem = ClassroomContent.GAPMAP.get(getArguments().getInt(ARG_ITEM_ID));
-		}
+	public void onConfigurationChanged(Configuration config) {
+	    super.onConfigurationChanged(config);
+	    // Reload information!
+	    ((MainActivity)getActivity()).setContentGap(mGap.getGapId());
 	}
+//
+//    @Override
+//    public void onPrepareOptionsMenu(Menu menu) {
+//        super.onPrepareOptionsMenu(menu);
+//        getActivity().getActionBar()
+//            .setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+//
+//    }
+//
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        switch (item.getItemId()) {
+//        case android.R.id.home:
+//            getActivity().onBackPressed();
+//            return true;
+//        }
+//        return false;
+//    }
 
-	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container,
-			Bundle savedInstanceState) {
-		View rootView = inflater.inflate(R.layout.fragment_classroom_detail,
-				container, false);
+    @Override
+    protected void onCreate(Bundle icicle, View view) {
+        super.onCreate(icicle);
+        
+        setHasOptionsMenu(true);
 
-		// Show the dummy content as text in a TextView.
-		if (mItem != null) {
-			((TextView) rootView.findViewById(R.id.classroom_detail))
-					.setText(mItem.getRoomNumber());
-		}
-		
-		ActionBar ab = getActivity().getActionBar();
-		ab.setTitle(mItem.getReversedName());
-		
-		String subtitle = String.format("Open %s until %s",
-		        mItem.getStartTime(), mItem.getEndTime());
-		ab.setSubtitle(subtitle);
-		
-		return rootView;
-	}
+        if (getArguments().containsKey(ARG_ITEM_ID))
+            mGap = ClassroomContent.GAPMAP.get(getArguments().getInt(ARG_ITEM_ID));
+        
+        if (mGap == null) {
+            mGap = new Gap();
+            mGap.setBuilding("Placeholder...");
+            mGap.setRoomNumber("Unknown");
+            mGap.setStartTime("midnight");
+            mGap.setEndTime("11:59pm");
+            mGap.setGapLength(444);
+            mGap.setSpaceId(1000000);
+        }
+        // Make UI
+        WidgetUtils.buildGapDetails(this, mGap);
+        
+        new SpaceSearch().execute(
+                String.format("http://mikewadsten.com/classroom_finder/space.cgi?spaceID=%d", mGap.getSpaceId()));
+    }
+    
+    private void searchResult(JSONObject info, boolean success) {
+        if (success) {
+            try {
+                SpaceInfo spaceinfo = new SpaceInfo(info);
+                WidgetUtils.buildGapDetails(this, mGap, spaceinfo);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    protected static class SearchResult {
+        String result = "";
+        boolean timeout = false;
+    }
+    
+    private class SpaceSearch extends AsyncTask<String, Void, SearchResult> {
+
+        @Override
+        protected SearchResult doInBackground(String... urls) {
+            SearchResult retval = new SearchResult();
+            String reply = "";
+            try {
+                String url = urls[0];
+                Log.d("ClassSearch", String.format("Querying %s", url));
+                DefaultHttpClient client = new DefaultHttpClient();
+                final HttpParams params = client.getParams();
+                // 3 seconds connection timeout
+                HttpConnectionParams.setConnectionTimeout(params, 3000);
+                // 10 seconds data timeout
+                HttpConnectionParams.setSoTimeout(params, 10000);
+                HttpGet get = new HttpGet(url);
+                HttpResponse ex = client.execute(get);
+                InputStream is = ex.getEntity().getContent();
+
+                BufferedReader buf = new BufferedReader(new InputStreamReader(is));
+                String s = "";
+                while ((s = buf.readLine()) != null) {
+                    reply += s;
+                }
+
+                Log.d("Classes Search", String.format("Read %d",
+                                                    reply.length()));
+                retval.result = reply;
+            } catch (SocketTimeoutException soe) {
+                Log.e("Classes Search", "Socket timed out");
+                retval.result = "Connection timed out while contacting server.";
+                retval.timeout = true;
+            } catch (Exception e) {
+                e.printStackTrace();
+                retval.result = String.format("Error: %s", e.getMessage());
+            }
+
+            return retval;
+        }
+
+        @Override
+        protected void onPostExecute(SearchResult result) {
+            String error;
+            
+            if (result.timeout) {
+                error = result.result; // nice way of putting it
+            }
+            else { // parse the result or something
+                try {
+                    JSONObject obj = new JSONObject(result.result);
+                    searchResult(obj, true);
+                    return;
+                } catch (JSONException e) {
+                    error = e.getMessage();
+                    try {
+                        // Errors should be in format {"error": ...}
+                        JSONObject err_obj = new JSONObject(result.result);
+                        error = String.format("Server error: %s",
+                                err_obj.getString("error"));
+                        Log.e("Class search", error);
+                    } catch (Exception e2) {
+                        Log.w("CLA.oPE", result.result);
+                        e2.printStackTrace();
+                        error = "Error: Got bad response from server.";
+                    }
+                }
+            }
+            searchResult(null, false);
+        }
+    }
 }
