@@ -257,7 +257,7 @@ public class MainActivity extends ActivityBase {
                 // specifies it is an XHR. condensed output is much much better and quicker to
                 // pull down than non-condensed ( json.dumps(_, indent=2) ) so we want to make
                 // sure that what we get (no pun intended) is as small as we can get it
-                get.addHeader('X-Requested-With', 'XMLHttpRequest');
+                get.addHeader("X-Requested-With", "XMLHttpRequest");
                 HttpResponse ex = client.execute(get);
                 InputStream is = ex.getEntity().getContent();
 
