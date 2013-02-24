@@ -1,6 +1,7 @@
 package com.mikewadsten.test_umnclass;
 
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.support.v4.app.Fragment;
 import android.view.View;
@@ -34,17 +35,28 @@ public class WidgetUtils {
             if (info != null) {
                 // Load space info into page
                 frag.addItem("Room Features", new ListItem(frag, info.getSeatType(), "Seat type"));
-                if (info.hasChalk())
-                    frag.addItem("Room Features", new ListItem(frag, "Chalkboard", "Board type"));
-                else if (info.hasMarkers())
-                    frag.addItem("Room Features", new ListItem(frag, "Markerboard", "Board type"));
                 
-                frag.addItem("Room Features", new ListItem(frag, Integer.toString(info.getCapacity()), "Capacity"));
+                Drawable iconboard = frag.getResources()
+                        .getDrawable(R.drawable.ic_class_board);
+                if (info.hasChalk())
+                    frag.addItem("Room Features", new ListItem(frag,
+                            "Chalkboard", "Board type", iconboard));
+                else if (info.hasMarkers())
+                    frag.addItem("Room Features", new ListItem(frag,
+                            "Markerboard", "Board type", iconboard));
+                
+                Drawable iconcapacity = frag.getResources()
+                        .getDrawable(R.drawable.ic_class_capacity);
+                frag.addItem("Room Features", new ListItem(
+                        frag, Integer.toString(info.getCapacity()),
+                        "Capacity", iconcapacity));
                 
                 final String url = info.getUrl();
+                Drawable iconweb = frag.getResources()
+                        .getDrawable(R.drawable.ic_class_web);
                 frag.addItem("More info",
-                        new ListItem(frag, "Classroom page", "Click to view",
-                                null) {
+                        new ListItem(frag,
+                                "Classroom page", "Click to view", iconweb) {
                     @Override
                     public void onClick(View v) {
                         super.onClick(v);
