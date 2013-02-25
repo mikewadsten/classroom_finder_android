@@ -22,7 +22,6 @@
             <item >stpaul</item>
         </string-array>
             <string name="preferences_info_url">Server Space Info URL</string>
-            <string name="default_server_space">http://mikewadsten.com/classroom_finder/space.cgi</string>
             <string-array name="server_search_names">
                 <item >Default (brontasaur.us)</item>
                 <item >MikeWadsten.com</item>

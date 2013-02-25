@@ -436,8 +436,8 @@ public class MainActivity extends BetterListActivity {
                                 obj.getString("error"));
                         Log.e("Class search", error);
                     }
-                    else if (obj.has("items")) {
-                        searchResult(obj.getJSONArray("items"), true, result.search);
+                    else if (obj.has("rooms")) {
+                        searchResult(obj.getJSONArray("rooms"), true, result.search);
                         return;
                     }
                 } catch (JSONException e) {
