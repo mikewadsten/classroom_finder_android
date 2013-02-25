@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <lint>
+    <issue id="CommitTransaction">
+        <ignore path="src\com\mikewadsten\test_umnclass\MainActivity.java" />
+    </issue>
     <issue id="DefaultLocale" severity="ignore" />
     <issue id="SelectableText" severity="ignore" />
 </lint>

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
     <PreferenceCategory android:title="@string/preferences_server">
-        <ListPreference android:key="pref_search_url" android:title="@string/preferences_search_url" android:summary="@string/summary_preferences_server_url" android:entries="@array/server_search_names" android:entryValues="@array/server_search_urls" android:defaultValue="http://brontasaur.us/search.json"/>
-        <ListPreference android:key="pref_info_url" android:title="@string/preferences_info_url" android:summary="@string/summary_preferences_server_url" android:entries="@array/server_space_names" android:entryValues="@array/server_space_urls" android:defaultValue="http://brontasaur.us/spaceinfo.json"/>
+        <ListPreference android:key="pref_search_url" android:title="@string/preferences_search_url" android:summary="@string/summary_preferences_server_url" android:entries="@array/server_search_names" android:entryValues="@array/server_search_urls" android:defaultValue="@string/default_server"/>
+        <ListPreference android:key="pref_info_url" android:title="@string/preferences_info_url" android:summary="@string/summary_preferences_server_url" android:entries="@array/server_space_names" android:entryValues="@array/server_space_urls" android:defaultValue="@string/default_server_space"/>
     </PreferenceCategory>
     
 

@@ -20,14 +20,26 @@ import org.json.JSONObject;
 
 import android.app.ActionBar;
 import android.app.ActionBar.OnNavigationListener;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.SearchManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -35,6 +47,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.SearchView;
 import android.widget.SpinnerAdapter;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.koushikdutta.widgets.BetterListActivity;
@@ -46,6 +59,7 @@ import com.mikewadsten.test_umnclass.WebUtil.SearchURL;
 public class MainActivity extends BetterListActivity {
     BetterListFragment mContent;
     private RefreshManager mRefresh;
+    private MenuItem mSearchItem;
 
     private class RefreshManager {
         private MenuItem refreshIcon;
@@ -59,8 +73,9 @@ public class MainActivity extends BetterListActivity {
         }
 
         public void updateRefresh(boolean refreshing) {
-            if (refreshIcon == null)
-                return;
+            if (refreshIcon == null) {
+                Log.d("updateRefresh", "icon is null");
+            }
 
             isRefreshing = refreshing;
 
@@ -85,11 +100,16 @@ public class MainActivity extends BetterListActivity {
         inflater.inflate(R.menu.main_menu, menu);
 
         // Get the search view and set it up correctly.
+        mSearchItem = menu.findItem(R.id.search);
         SearchManager sm = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        SearchView sv = (SearchView) menu.findItem(R.id.search).getActionView();
+        SearchView sv = (SearchView) mSearchItem.getActionView();
         sv.setSearchableInfo(sm.getSearchableInfo(getComponentName()));
-        sv.setQueryHint("Search all rooms");
+        setupSearchHint(sv, getActionBar().getSelectedNavigationIndex());
         sv.setSubmitButtonEnabled(true);
+        // show refreshing on load?
+        MenuItem refresh = menu.findItem(R.id.refresh);
+        if (refresh != null)
+            mRefresh.setIcon(refresh);
         return true;
     }
 
@@ -102,6 +122,18 @@ public class MainActivity extends BetterListActivity {
         return true;
     }
 
+    private void setupSearchHint(SearchView sv, int position) {
+        try {
+            String campus = getResources()
+                    .getStringArray(R.array.campus_list)[position];
+            sv.setQueryHint(String.format("Search %s", campus));
+        } catch (Exception e) {
+            // Probably because getSelectedCampusName was called before
+            // the activity was fully running, so the navigation index
+            // is -1, which is a bad index into the name array...
+        }
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -112,12 +144,15 @@ public class MainActivity extends BetterListActivity {
             Intent settingsIntent = new Intent(this, SettingsActivity.class);
             startActivityForResult(settingsIntent, 1);
             return true;
+        case R.id.about:
+            showAboutDialog(this);
+            return true;
         }
         return false;
     }
 
     @Override
-    public void onCreate(Bundle icicle, View view) {
+    public void onCreate(Bundle icicle, final View view) {
         getFragment().setEmpty(R.string.empty_class_list);
 
         mRefresh = new RefreshManager();
@@ -126,19 +161,23 @@ public class MainActivity extends BetterListActivity {
 
         bar.setSubtitle(null);
 
-//        bar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+        //        bar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
         SpinnerAdapter spin = ArrayAdapter.createFromResource(this,
                 R.array.campus_list, R.layout.nav_item);
 
         OnNavigationListener navListener = new OnNavigationListener() {
             String[] campuses = getResources().getStringArray(R.array.campus_list);
             @Override
-            public boolean onNavigationItemSelected(int itemPosition,
-                    long itemId) {
-                //                mRefresh.updateRefresh(true);
-                //                new Search().execute("?campus=east");
-                Log.d("CLASSES-nav", String.format("Selected: %s", campuses[itemPosition]));
+            public boolean onNavigationItemSelected(int pos, long itemId) {
+                Log.d("CLASSES-nav",
+                        String.format("Selected: %s", campuses[pos]));
+
+                setupSearchHint((SearchView)mSearchItem.getActionView(), pos);
                 startRefresh();
+                // hopefully clears out contents
+                if (mContent != null) {
+                    backToList();
+                }
                 return true;
             }
         };
@@ -146,34 +185,85 @@ public class MainActivity extends BetterListActivity {
 
         //        view.findViewById(R.id.list_content_container).setPadding(8, 2, 8, 2);
         super.onCreate(icicle, view);
-        view.findViewById(R.id.listview).setPadding(0, 0, 0, 0);
+        
+        // Search handling
+        handleIntent(getIntent());
+    }
+    
+    @Override
+    protected void onNewIntent(Intent intent) {
+        setIntent(intent);
+        handleIntent(intent);
+    }
+    
+    private void handleIntent(Intent intent) {
+        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+            String query = intent.getStringExtra(SearchManager.QUERY);
+            
+            // Collapse the search view
+            if (mSearchItem != null)
+                mSearchItem.collapseActionView();
+            startRefresh(query);
+        }
     }
 
     public void onBackPressed() {
-        if (getFragment().onBackPressed())
+        if (getFragment().onBackPressed()) {
+            mContent = null; // not showing space info anymore
             return;
+        }
         super.onBackPressed();
     }
     
+    public void backToList() {
+        try {
+            // Show nothing on tablets
+            getFragment().setContent(new Fragment(), true);
+            mContent = null;
+            // Go back to list on phones
+            getFragment().onBackPressed();
+        } catch (Exception e) {
+            Log.e("MainActivity backToList", e.getMessage());
+        }
+    }
+
     public void startRefresh() {
+        startRefresh(null);
+    }
+    
+    /**
+     * Start refresh, but with a search query too.
+     * @param query
+     */
+    public void startRefresh(String query) {
         mRefresh.updateRefresh(true);
         String campus = getSelectedCampus();
         String defaultServer = getResources().getString(R.string.default_server);
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         SearchURL url = new SearchURL(
                 prefs.getString("pref_search_url", defaultServer));
+        
         url.query("campus", campus);
-        new ClassSearch().execute(url.toString());
+        if (query != null)
+            url.query("search", query);
+        new ClassSearch().setSearch(query).execute(url.toURL());
+        if (mContent != null)
+            backToList();
     }
-    
+
     public String getSelectedCampus() {
         int index = getActionBar().getSelectedNavigationIndex();
         return getResources().getStringArray(R.array.campus_key_list)[index];
     }
 
+    public String getSelectedCampusName() {
+        int index = getActionBar().getSelectedNavigationIndex();
+        return getResources().getStringArray(R.array.campus_list)[index];
+    }
+
     void setContentGap(final int id) {
-//        Toast.makeText(MainActivity.this,
-//                String.format("Space: %d", id), Toast.LENGTH_SHORT).show();
+        //        Toast.makeText(MainActivity.this,
+        //                String.format("Space: %d", id), Toast.LENGTH_SHORT).show();
         Bundle arguments = new Bundle();
         arguments.putInt(ClassroomDetailFragment.ARG_ITEM_ID, id);
         mContent = new ClassroomDetailFragment();
@@ -197,12 +287,38 @@ public class MainActivity extends BetterListActivity {
         });
     }
     
-    private void searchResult(JSONArray arr, boolean success) {
+    private void clearGaps() {
+        try {
+            getFragment().removeSection("Rooms");
+        } catch (Exception e) {
+            // wasn't there, alright.
+        }
+        try {
+            getFragment().removeSection("Results");
+        } catch (Exception e) {
+            // wasn't there, alright.
+        }
+        ClassroomContent.clearItems();
+    }
+
+    private void searchResult(JSONArray arr, boolean success, String search) {
         if (success) {
             // We can't update data if we got nothing back.
             ArrayList<Gap> gaps = new ArrayList<Gap>();
             
+            if (search != null) {
+                String sub = String.format("Search: %s", search);
+                getActionBar().setSubtitle(sub);
+            }
+
             final int len = arr.length();
+            if (len == 0 && search != null) {
+                // No matches...
+                setEmpty(R.string.empty_search_result);
+                clearGaps();
+                mRefresh.updateRefresh(false);
+                return;
+            }
             try {
                 for (int i = 0; i < len; i++) {
                     try {
@@ -215,37 +331,55 @@ public class MainActivity extends BetterListActivity {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            
+
             if (gaps.size() > 0) {
                 // Wipe out what's there
-                getFragment().removeSection("Rooms");
-                ClassroomContent.clearItems();
+                clearGaps();
                 for (Gap g : gaps) {
                     addGap(g);
-                    Log.d("Class gap", g.toString());
+//                    Log.d("Class gap", g.toString());
                 }
-                
-                ActionBar bar = getActionBar();
-                SimpleDateFormat fmt = new SimpleDateFormat("h:mm a", Locale.US);
-                bar.setSubtitle(String.format("Updated at %s", fmt.format(new Date())));
+
+                if (search == null) {
+                    // only say "Updated at ..." if not search
+                    ActionBar bar = getActionBar();
+                    SimpleDateFormat fmt = new SimpleDateFormat(
+                            "h:mm a", Locale.US);
+                    bar.setSubtitle(
+                            String.format("Updated at %s", 
+                                            fmt.format(new Date())));
+                }
             } else {
+                if (search != null) {
+                    // No matches.
+                    setEmpty(R.string.empty_search_result);
+                    clearGaps();
+                }
                 Log.i("Search result", "Got data, but nothing was parsed from it.");
             }
         }
-        
+
         mRefresh.updateRefresh(false);
     }
-    
+
     protected static class SearchResult {
         String result = "";
         boolean timeout = false;
+        String search = null;
     }
 
     private class ClassSearch extends AsyncTask<String, Void, SearchResult> {
-
+        private String queryString = null;
+        
+        public ClassSearch setSearch(String query) {
+            queryString = query;
+            return this;
+        }
+        
         @Override
         protected SearchResult doInBackground(String... urls) {
             SearchResult retval = new SearchResult();
+            retval.search = queryString;
             String reply = "";
             try {
                 String url = urls[0];
@@ -273,7 +407,7 @@ public class MainActivity extends BetterListActivity {
                 }
 
                 Log.d("Classes Search", String.format("Read %d",
-                                                    reply.length()));
+                        reply.length()));
                 retval.result = reply;
             } catch (SocketTimeoutException soe) {
                 Log.e("Classes Search", "Socket timed out");
@@ -290,7 +424,7 @@ public class MainActivity extends BetterListActivity {
         @Override
         protected void onPostExecute(SearchResult result) {
             String error = "Error: Got bad response from server.";
-            
+
             if (result.timeout) {
                 error = result.result; // nice way of putting it
             }
@@ -303,7 +437,7 @@ public class MainActivity extends BetterListActivity {
                         Log.e("Class search", error);
                     }
                     else if (obj.has("items")) {
-                        searchResult(obj.getJSONArray("items"), true);
+                        searchResult(obj.getJSONArray("items"), true, result.search);
                         return;
                     }
                 } catch (JSONException e) {
@@ -313,11 +447,68 @@ public class MainActivity extends BetterListActivity {
                     error = String.format("Error: %s", error);
                 }
             }
-            
+
             // Show a Toast to indicate what's up
             Toast.makeText(getApplicationContext(), error,
                     Toast.LENGTH_SHORT).show();
-            searchResult(null, false);
+            searchResult(null, false, result.search);
+        }
+    }
+    
+    public static void showAboutDialog(BetterListActivity activity) {
+        FragmentManager fm = activity.getSupportFragmentManager();
+        FragmentTransaction ft = fm.beginTransaction();
+        Fragment prev = fm.findFragmentByTag("dialog_about");
+        if (prev != null)
+            ft.remove(prev);
+        ft.addToBackStack(null);
+        
+        new AboutDialog().show(ft, "dialog_about");
+//        ft.commit();
+    }
+
+    // AboutDialog code "inspired" (read - stolen) from Roman Nurik's
+    // DashClock code.
+    public static class AboutDialog extends DialogFragment {
+        private static final String VERSION_UNAVAILABLE = "N/A";
+
+        public AboutDialog() {}
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // Get app version
+            PackageManager pm = getActivity().getPackageManager();
+            String packageName = getActivity().getPackageName();
+            String versionName;
+            try {
+                PackageInfo info = pm.getPackageInfo(packageName, 0);
+                versionName = info.versionName;
+            } catch (PackageManager.NameNotFoundException e) {
+                versionName = VERSION_UNAVAILABLE;
+            }
+
+            // Build the about body view
+            LayoutInflater layoutInflater = getActivity().getLayoutInflater();
+            View rootView = layoutInflater.inflate(R.layout.dialog_about, null);
+            TextView nameAndVersion = (TextView) rootView
+                    .findViewById(R.id.app_name_and_version);
+            nameAndVersion.setText(
+                    Html.fromHtml(
+                            String.format("<b>Classroom Finder</b>&nbsp;<font color=\"#888888\">v%s</font>", versionName)));
+            ((TextView)rootView.findViewById(R.id.about_body))
+            .setText(Html.fromHtml(getString(R.string.about_body)));
+            ((TextView)rootView.findViewById(R.id.about_body))
+            .setMovementMethod(new LinkMovementMethod());
+
+            return new AlertDialog.Builder(getActivity())
+            .setView(rootView)
+            .setPositiveButton(R.string.close,
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+            })
+            .create();
         }
     }
 }

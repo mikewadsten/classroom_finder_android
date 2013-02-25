@@ -43,5 +43,27 @@
             <string name="search_title">Classroom Search</string>
             <string name="search_subtitle">Rooms matching \&quot;%s\&quot;</string>
             <string name="search_not_imp">Search is not implemented.</string>
+            <string name="about_body"><![CDATA[
+		<a href="http://brontasaur.us/about">More info</a>&nbsp;&nbsp;&middot;
+		&nbsp;&nbsp;<a href="http://mikewadsten.com">App developer</a>
+		<br /><br />
+		The University of Minnesota Classroom Finder searches in a
+		database we fill every hour for any unscheduled classrooms on
+		the Twin Cities campus and presents the information in a
+		meaningful way. Simply whip out your smartphone while wandering
+		around on campus and you can instantly find a quiet,
+		comfortable room to actually get work done.<br />
+		<br />&bull; <b>Sort</b> the results by campus using the dropdown
+		at the top of the screen.
+		<br />&bull; <b>Click</b> on a class listing to see more information
+		about the room in question.
+		<br />&bull; You can even <b>search</b> for rooms by name.
+		<br /><br />
+		Thanks to Koushik Dutta for his
+		<a href="http://github.com/koush/Widgets">Widgets</a> library.
+                ]]></string>
+            <string name="menu_about">About</string>
+            <string name="close">Close</string>
+            <string name="default_server_space">http://mikewadsten.com/classroom_finder/space.cgi</string>
 
 </resources>
