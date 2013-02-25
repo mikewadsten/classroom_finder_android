@@ -40,5 +40,8 @@
                 <item >http://mikewadsten.com/classroom_finder/space.cgi</item>
             </string-array>
             <string name="empty_search_result">No matches</string>
+            <string name="search_title">Classroom Search</string>
+            <string name="search_subtitle">Rooms matching \&quot;%s\&quot;</string>
+            <string name="search_not_imp">Search is not implemented.</string>
 
 </resources>

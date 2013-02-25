@@ -89,6 +89,7 @@ public class MainActivity extends ActivityBase {
         SearchView sv = (SearchView) menu.findItem(R.id.search).getActionView();
         sv.setSearchableInfo(sm.getSearchableInfo(getComponentName()));
         sv.setQueryHint("Search all rooms");
+        sv.setSubmitButtonEnabled(true);
         return true;
     }
 
