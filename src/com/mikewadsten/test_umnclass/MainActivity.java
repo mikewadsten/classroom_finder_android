@@ -185,8 +185,8 @@ public class MainActivity extends ActivityBase {
     private void addGap(Gap g) {
         ClassroomContent.addItem(g);
         final int id = g.getGapId();
-        String timespan = String.format("%s to %s (%d min)", g.getStartTime(),
-                g.getEndTime(), g.getGapLength());
+        String timespan = String.format("%s to %s",
+                g.getStartTime(), g.getEndTime());
         addItem("Rooms", new ListItem(getFragment(), g.getFullName(), timespan){
             @Override
             public void onClick(View v) {

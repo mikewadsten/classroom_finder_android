@@ -26,14 +26,24 @@ public class WidgetUtils {
             frag.removeSection("Location");
             frag.removeSection("Availability");
             frag.removeSection("Room Features");
-            frag.addItem("Location", new ListItem(frag, gap.getBuilding(), "Building"));
-            frag.addItem("Location", new ListItem(frag, gap.getRoomNumber(), "Room"));
-            frag.addItem("Availability", new ListItem(frag, gap.getStartTime(), "Start time"));
-            frag.addItem("Availability", new ListItem(frag, gap.getEndTime(), "End time"));
+            frag.addItem("Location",
+                    new ListItem(frag, gap.getBuilding(), "Building",
+                            R.drawable.ic_class_location));
+            frag.addItem("Location",
+                    new ListItem(frag, gap.getRoomNumber(), "Room",
+                            R.drawable.ic_class_location));
+            frag.addItem("Availability",
+                    new ListItem(frag, gap.getStartTime(), "Start time",
+                            R.drawable.ic_class_time));
+            frag.addItem("Availability",
+                    new ListItem(frag, gap.getEndTime(), "End time",
+                            R.drawable.ic_class_time));
             
             if (info != null) {
                 // Load space info into page
-                frag.addItem("Room Features", new ListItem(frag, info.getSeatType(), "Seat type"));
+                frag.addItem("Room Features",
+                        new ListItem(frag, info.getSeatType(), "Seat type",
+                                R.drawable.ic_class_info));
                 
                 Drawable iconboard = frag.getResources()
                         .getDrawable(R.drawable.ic_class_board);

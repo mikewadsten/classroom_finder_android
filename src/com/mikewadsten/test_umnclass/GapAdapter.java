@@ -60,8 +60,10 @@ public class GapAdapter extends ArrayAdapter<Gap> {
         Gap item = ClassroomContent.GAPS.get(position);
         gap.name.setText(item.getFullName());
         gap.info.setText(
-                String.format("%s to %s (%d min)", item.getStartTime(),
-                        item.getEndTime(), item.getGapLength()));
+                String.format("%s to %s",
+                        item.getStartTime(), item.getEndTime()));
+//                String.format("%s to %s (%d min)", item.getStartTime(),
+//                        item.getEndTime(), item.getGapLength()));
         v.setId(position);
         
         return v;
