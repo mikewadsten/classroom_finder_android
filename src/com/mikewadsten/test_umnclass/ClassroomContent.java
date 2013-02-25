@@ -19,10 +19,15 @@ public class ClassroomContent {
 	 */
 	public static List<Gap> GAPS = new ArrayList<Gap>();
 	public static SparseArray<Gap> GAPMAP = new SparseArray<Gap>();
+	public static SparseArray<SpaceInfo> SPACEMAP = new SparseArray<SpaceInfo>();
 
 	public static void addItem(Gap item) {
 		GAPS.add(item);
 		GAPMAP.put(item.getGapId(), item);
+	}
+	
+	public static void addSpace(SpaceInfo space) {
+	    SPACEMAP.put(space.getSpaceId(), space);
 	}
 	
 	public static void addAll(Collection<Gap> gaps) {
@@ -32,5 +37,6 @@ public class ClassroomContent {
 	public static void clearItems() {
 	    GAPS.clear();
 	    GAPMAP.clear();
+	    SPACEMAP.clear();
 	}
 }

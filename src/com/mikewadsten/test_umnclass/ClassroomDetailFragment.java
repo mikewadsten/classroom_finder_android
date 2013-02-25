@@ -13,13 +13,16 @@ import org.apache.http.params.HttpParams;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 
 import com.koushikdutta.widgets.BetterListFragment;
+import com.mikewadsten.test_umnclass.WebUtil.SearchURL;
 
 
 /**
@@ -76,6 +79,7 @@ public class ClassroomDetailFragment extends BetterListFragment {
         if (getArguments().containsKey(ARG_ITEM_ID))
             mGap = ClassroomContent.GAPMAP.get(getArguments().getInt(ARG_ITEM_ID));
         
+        SpaceInfo space = null;
         if (mGap == null) {
             mGap = new Gap();
             mGap.setBuilding("Placeholder...");
@@ -83,13 +87,23 @@ public class ClassroomDetailFragment extends BetterListFragment {
             mGap.setStartTime("midnight");
             mGap.setEndTime("11:59pm");
             mGap.setGapLength(444);
-            mGap.setSpaceId(1000000);
+            mGap.setSpaceId(-1);
+        } else {
+            // Fetch the space info if there is one
+            space = ClassroomContent.SPACEMAP.get(mGap.getSpaceId());
         }
         // Make UI
-        WidgetUtils.buildGapDetails(this, mGap);
+        WidgetUtils.buildGapDetails(this, mGap, space);
         
-        new SpaceSearch().execute(
-                String.format("http://mikewadsten.com/classroom_finder/space.cgi?spaceID=%d", mGap.getSpaceId()));
+        if (space == null) {
+            // Need to download space info, whoop whoop
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            SearchURL url = new SearchURL(
+                    prefs.getString("pref_info_url",
+                            getString(R.string.default_server_space)));
+            url.query("spaceID", Integer.toString(mGap.getSpaceId()));
+            new SpaceSearch().execute(url.toURL());
+        }
     }
     
     private void searchResult(JSONObject info, boolean success) {
@@ -97,6 +111,8 @@ public class ClassroomDetailFragment extends BetterListFragment {
             try {
                 SpaceInfo spaceinfo = new SpaceInfo(info);
                 WidgetUtils.buildGapDetails(this, mGap, spaceinfo);
+                // save off the space info
+                ClassroomContent.SPACEMAP.put(spaceinfo.getSpaceId(), spaceinfo);
             } catch (Exception e) {
                 e.printStackTrace();
             }
