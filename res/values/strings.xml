@@ -2,7 +2,6 @@
 <resources>
 
     <string name="app_name">Classroom Finder</string>
-    <string name="title_classroom_detail">Classroom Details</string>
     <string-array name="campus_list">
         <item >East Bank</item>
         <item >West Bank</item>
@@ -39,9 +38,6 @@
                 <item >http://mikewadsten.com/classroom_finder/space.cgi</item>
             </string-array>
             <string name="empty_search_result">No matches</string>
-            <string name="search_title">Classroom Search</string>
-            <string name="search_subtitle">Rooms matching \&quot;%s\&quot;</string>
-            <string name="search_not_imp">Search is not implemented.</string>
             <string name="about_body"><![CDATA[
 		<a href="http://brontasaur.us/about">More info</a>&nbsp;&nbsp;&middot;
 		&nbsp;&nbsp;<a href="http://mikewadsten.com">App developer</a>
@@ -64,5 +60,6 @@
             <string name="menu_about">About</string>
             <string name="close">Close</string>
             <string name="default_server_space">http://mikewadsten.com/classroom_finder/space.cgi</string>
+            <string name="version_name">0.2</string>
 
 </resources>
