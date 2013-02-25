@@ -6,10 +6,10 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.koushikdutta.widgets.ActivityBase;
+import com.koushikdutta.widgets.BetterListActivity;
 import com.koushikdutta.widgets.ListContentFragment;
 
-public class SearchActivity extends ActivityBase {
+public class SearchActivity extends BetterListActivity {
     //============================================
     // Needed for correct UI on tablets and phones
     

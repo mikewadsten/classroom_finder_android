@@ -5,22 +5,22 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.view.View;
 
-import com.koushikdutta.widgets.ActivityBaseFragment;
+import com.koushikdutta.widgets.BetterListFragment;
 import com.koushikdutta.widgets.ListItem;
 
 public class WidgetUtils {
-    public static void buildGapDetails(ActivityBaseFragment frag, int spaceID) {
+    public static void buildGapDetails(BetterListFragment frag, int spaceID) {
         Gap gap = ClassroomContent.GAPMAP.get(spaceID);
         if (gap == null)
             gap = new Gap();
         buildGapDetails(frag, gap, null);
     }
     
-    public static void buildGapDetails(ActivityBaseFragment frag, Gap gap) {
+    public static void buildGapDetails(BetterListFragment frag, Gap gap) {
         buildGapDetails(frag, gap, null);
     }
     
-    public static void buildGapDetails(final ActivityBaseFragment frag,
+    public static void buildGapDetails(final BetterListFragment frag,
             Gap gap, SpaceInfo info) {
         try {
             frag.removeSection("Location");

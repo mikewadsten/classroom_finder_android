@@ -37,14 +37,14 @@ import android.widget.SearchView;
 import android.widget.SpinnerAdapter;
 import android.widget.Toast;
 
-import com.koushikdutta.widgets.ActivityBase;
-import com.koushikdutta.widgets.ActivityBaseFragment;
+import com.koushikdutta.widgets.BetterListActivity;
+import com.koushikdutta.widgets.BetterListFragment;
 import com.koushikdutta.widgets.ListContentFragment;
 import com.koushikdutta.widgets.ListItem;
 import com.mikewadsten.test_umnclass.WebUtil.SearchURL;
 
-public class MainActivity extends ActivityBase {
-    ActivityBaseFragment mContent;
+public class MainActivity extends BetterListActivity {
+    BetterListFragment mContent;
     private RefreshManager mRefresh;
 
     private class RefreshManager {
@@ -179,7 +179,7 @@ public class MainActivity extends ActivityBase {
         mContent = new ClassroomDetailFragment();
         mContent.setArguments(arguments);
 
-        getFragment().setContent(mContent);
+        getFragment().setContent(mContent, false);
     }
 
     private void addGap(Gap g) {

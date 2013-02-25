@@ -19,13 +19,13 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
-import com.koushikdutta.widgets.ActivityBaseFragment;
+import com.koushikdutta.widgets.BetterListFragment;
 
 
 /**
  * Fragment to present classroom opening details.
  */
-public class ClassroomDetailFragment extends ActivityBaseFragment {
+public class ClassroomDetailFragment extends BetterListFragment {
 	/**
 	 * The fragment argument representing the item ID that this fragment
 	 * represents.
