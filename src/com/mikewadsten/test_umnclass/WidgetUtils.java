@@ -26,6 +26,7 @@ public class WidgetUtils {
             frag.removeSection("Location");
             frag.removeSection("Availability");
             frag.removeSection("Room Features");
+            frag.removeSection("Room Info"); // "Loading..." for room info
             frag.addItem("Location",
                     new ListItem(frag, gap.getBuilding(), "Building",
                             R.drawable.ic_class_location));

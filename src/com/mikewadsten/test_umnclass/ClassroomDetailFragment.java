@@ -20,8 +20,10 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.koushikdutta.widgets.BetterListFragment;
+import com.koushikdutta.widgets.ListItem;
 import com.mikewadsten.test_umnclass.WebUtil.SearchURL;
 
 
@@ -102,6 +104,7 @@ public class ClassroomDetailFragment extends BetterListFragment {
                     prefs.getString("pref_info_url",
                             getString(R.string.default_server_space)));
             url.query("spaceID", Integer.toString(mGap.getSpaceId()));
+            addItem("Room Info", new ListItem(this, "Loading...", null, 0));
             new SpaceSearch().execute(url.toURL());
         }
     }
@@ -113,6 +116,12 @@ public class ClassroomDetailFragment extends BetterListFragment {
                 WidgetUtils.buildGapDetails(this, mGap, spaceinfo);
                 // save off the space info
                 ClassroomContent.SPACEMAP.put(spaceinfo.getSpaceId(), spaceinfo);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                WidgetUtils.buildGapDetails(this, mGap, null);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -199,6 +208,12 @@ public class ClassroomDetailFragment extends BetterListFragment {
                 }
             }
             searchResult(null, false);
+            try {
+                Toast.makeText(getActivity(),
+                        error, Toast.LENGTH_SHORT).show();
+            } catch (Exception e) {
+                // fragment gone probably...
+            }
         }
     }
 }
