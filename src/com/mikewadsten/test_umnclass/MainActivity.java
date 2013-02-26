@@ -20,26 +20,17 @@ import org.json.JSONObject;
 
 import android.app.ActionBar;
 import android.app.ActionBar.OnNavigationListener;
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.SearchManager;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.text.Html;
-import android.text.method.LinkMovementMethod;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -47,7 +38,6 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.SearchView;
 import android.widget.SpinnerAdapter;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.koushikdutta.widgets.BetterListActivity;
@@ -60,31 +50,7 @@ public class MainActivity extends BetterListActivity {
     BetterListFragment mContent;
     private RefreshManager mRefresh;
     private MenuItem mSearchItem;
-
-    private class RefreshManager {
-        private MenuItem refreshIcon;
-        private boolean isRefreshing;
-
-        public RefreshManager() {
-        }
-
-        public void setIcon(MenuItem icon) {
-            refreshIcon = icon;
-        }
-
-        public void updateRefresh(boolean refreshing) {
-            if (refreshIcon == null) {
-                Log.d("updateRefresh", "icon is null");
-            }
-
-            isRefreshing = refreshing;
-
-            if (isRefreshing)
-                refreshIcon.setActionView(R.layout.action_bar_indeterminate_progress);
-            else
-                refreshIcon.setActionView(null);
-        }
-    }
+    private OnNavigationListener mNavListener;
 
     public MainActivity() {
         super(ListContentFragment.class);
@@ -122,6 +88,12 @@ public class MainActivity extends BetterListActivity {
         return true;
     }
 
+    /**
+     * Update the search view's hint to reflect the currently selected
+     * campus.
+     * @param sv SearchView we get if we hit the Search button
+     * @param position currently selected campus, by index
+     */
     private void setupSearchHint(SearchView sv, int position) {
         try {
             String campus = getResources()
@@ -164,8 +136,8 @@ public class MainActivity extends BetterListActivity {
         //        bar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
         SpinnerAdapter spin = ArrayAdapter.createFromResource(this,
                 R.array.campus_list, R.layout.nav_item);
-
-        OnNavigationListener navListener = new OnNavigationListener() {
+        
+        mNavListener = new OnNavigationListener() {
             String[] campuses = getResources().getStringArray(R.array.campus_list);
             @Override
             public boolean onNavigationItemSelected(int pos, long itemId) {
@@ -181,9 +153,9 @@ public class MainActivity extends BetterListActivity {
                 return true;
             }
         };
-        bar.setListNavigationCallbacks(spin, navListener);
+        
+        bar.setListNavigationCallbacks(spin, mNavListener);
 
-        //        view.findViewById(R.id.list_content_container).setPadding(8, 2, 8, 2);
         super.onCreate(icicle, view);
         
         // Search handling
@@ -215,6 +187,13 @@ public class MainActivity extends BetterListActivity {
         super.onBackPressed();
     }
     
+    /**
+     * Wipe out the detail fragment if it is there, and go back to the
+     * class list if we're on a phone.
+     * <br /><br />
+     * Called when a refresh is started (either by hitting refresh or by
+     * choosing a new campus)
+     */
     public void backToList() {
         try {
             // Show nothing on tablets
@@ -233,7 +212,7 @@ public class MainActivity extends BetterListActivity {
     
     /**
      * Start refresh, but with a search query too.
-     * @param query
+     * @param query query being searched for
      */
     public void startRefresh(String query) {
         mRefresh.updateRefresh(true);
@@ -251,16 +230,30 @@ public class MainActivity extends BetterListActivity {
             backToList();
     }
 
+    /**
+     * Get the campus "key" (east, west, stpaul) that is currently selected
+     * in the action bar dropdown
+     * @return the campus that is currently selected
+     */
     public String getSelectedCampus() {
         int index = getActionBar().getSelectedNavigationIndex();
         return getResources().getStringArray(R.array.campus_key_list)[index];
     }
 
+    /**
+     * Get the actual name corresponding to the selected campus (e.g.
+     * "East Bank", "West Bank"...
+     * @return the name of the campus that is selected now
+     */
     public String getSelectedCampusName() {
         int index = getActionBar().getSelectedNavigationIndex();
         return getResources().getStringArray(R.array.campus_list)[index];
     }
 
+    /**
+     * Show a new detail fragment for the newly selected item or whatnot
+     * @param id gap ID for the selected gap
+     */
     void setContentGap(final int id) {
         //        Toast.makeText(MainActivity.this,
         //                String.format("Space: %d", id), Toast.LENGTH_SHORT).show();
@@ -272,6 +265,10 @@ public class MainActivity extends BetterListActivity {
         getFragment().setContent(mContent, false);
     }
 
+    /**
+     * Add a new class item listing
+     * @param g the Gap object being added to the list and stuff
+     */
     private void addGap(Gap g) {
         ClassroomContent.addItem(g);
         final int id = g.getGapId();
@@ -287,6 +284,9 @@ public class MainActivity extends BetterListActivity {
         });
     }
     
+    /**
+     * Wipe out the class item listings.
+     */
     private void clearGaps() {
         try {
             getFragment().removeSection("Rooms");
@@ -301,6 +301,12 @@ public class MainActivity extends BetterListActivity {
         ClassroomContent.clearItems();
     }
 
+    /**
+     * "Callback" for when a data refresh is finished
+     * @param arr Possibly populated array of results
+     * @param success true if we got good data back
+     * @param search whatever the search query was (or null if none)
+     */
     private void searchResult(JSONArray arr, boolean success, String search) {
         if (success) {
             // We can't update data if we got nothing back.
@@ -337,7 +343,6 @@ public class MainActivity extends BetterListActivity {
                 clearGaps();
                 for (Gap g : gaps) {
                     addGap(g);
-//                    Log.d("Class gap", g.toString());
                 }
 
                 if (search == null) {
@@ -361,7 +366,32 @@ public class MainActivity extends BetterListActivity {
 
         mRefresh.updateRefresh(false);
     }
+    
+    /**
+     * Launches the "About" dialog, which is all pretty and borrowed from
+     * Roman Nurik's code for DashClock. Thanks, Roman.
+     * @param activity the current activity
+     */
+    public static void showAboutDialog(BetterListActivity activity) {
+        FragmentManager fm = activity.getSupportFragmentManager();
+        FragmentTransaction ft = fm.beginTransaction();
+        Fragment prev = fm.findFragmentByTag("dialog_about");
+        if (prev != null)
+            ft.remove(prev);
+        ft.addToBackStack(null);
+        
+        new AboutDialog().show(ft, "dialog_about");
+    }
 
+    
+    //=========================================================================
+    //
+    // Anything related to executing a data sync (i.e. pulling down class list)
+    // from the server is below here. Well, except for the searchResult
+    // function, but that's because that just gets called from the
+    // AsyncTask below.
+    //
+    
     protected static class SearchResult {
         String result = "";
         boolean timeout = false;
@@ -452,63 +482,6 @@ public class MainActivity extends BetterListActivity {
             Toast.makeText(getApplicationContext(), error,
                     Toast.LENGTH_SHORT).show();
             searchResult(null, false, result.search);
-        }
-    }
-    
-    public static void showAboutDialog(BetterListActivity activity) {
-        FragmentManager fm = activity.getSupportFragmentManager();
-        FragmentTransaction ft = fm.beginTransaction();
-        Fragment prev = fm.findFragmentByTag("dialog_about");
-        if (prev != null)
-            ft.remove(prev);
-        ft.addToBackStack(null);
-        
-        new AboutDialog().show(ft, "dialog_about");
-//        ft.commit();
-    }
-
-    // AboutDialog code "inspired" (read - stolen) from Roman Nurik's
-    // DashClock code.
-    public static class AboutDialog extends DialogFragment {
-        private static final String VERSION_UNAVAILABLE = "N/A";
-
-        public AboutDialog() {}
-
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            // Get app version
-            PackageManager pm = getActivity().getPackageManager();
-            String packageName = getActivity().getPackageName();
-            String versionName;
-            try {
-                PackageInfo info = pm.getPackageInfo(packageName, 0);
-                versionName = info.versionName;
-            } catch (PackageManager.NameNotFoundException e) {
-                versionName = VERSION_UNAVAILABLE;
-            }
-
-            // Build the about body view
-            LayoutInflater layoutInflater = getActivity().getLayoutInflater();
-            View rootView = layoutInflater.inflate(R.layout.dialog_about, null);
-            TextView nameAndVersion = (TextView) rootView
-                    .findViewById(R.id.app_name_and_version);
-            nameAndVersion.setText(
-                    Html.fromHtml(
-                            String.format("<b>Classroom Finder</b>&nbsp;<font color=\"#888888\">v%s</font>", versionName)));
-            ((TextView)rootView.findViewById(R.id.about_body))
-            .setText(Html.fromHtml(getString(R.string.about_body)));
-            ((TextView)rootView.findViewById(R.id.about_body))
-            .setMovementMethod(new LinkMovementMethod());
-
-            return new AlertDialog.Builder(getActivity())
-            .setView(rootView)
-            .setPositiveButton(R.string.close,
-                    new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-            })
-            .create();
         }
     }
 }
