@@ -23,6 +23,7 @@ public class RefreshManager {
     public void updateRefresh(boolean refreshing) {
         if (refreshIcon == null) {
             Log.d("updateRefresh", "icon is null");
+            return;
         }
 
         isRefreshing = refreshing;
