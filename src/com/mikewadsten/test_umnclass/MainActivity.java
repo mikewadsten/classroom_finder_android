@@ -24,6 +24,7 @@ import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -47,6 +48,12 @@ import com.koushikdutta.widgets.ListItem;
 import com.mikewadsten.test_umnclass.WebUtil.SearchURL;
 
 public class MainActivity extends BetterListActivity {
+    // One note about the Widgets library:
+    // Need to make sure res/layout(-v14)/list_item_base.xml
+    // has the ImageView elements set to have
+    // layout_width="48dp" and layout_height="32dp". Otherwise
+    // the icons are blurry and stuff.
+    
     BetterListFragment mContent;
     private RefreshManager mRefresh;
     private MenuItem mSearchItem;
@@ -81,7 +88,6 @@ public class MainActivity extends BetterListActivity {
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        getActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
         MenuItem refresh = menu.findItem(R.id.refresh);
         if (refresh != null)
             mRefresh.setIcon(refresh);
@@ -110,7 +116,10 @@ public class MainActivity extends BetterListActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
         case R.id.refresh:
-            startRefresh();
+            // shouldn't need to catch exception thrown by call, because
+            // you can't hit the menu item without the activity existing
+            String campus = getSelectedCampus();
+            startRefresh(campus);
             return true;
         case R.id.settings:
             Intent settingsIntent = new Intent(this, SettingsActivity.class);
@@ -132,28 +141,28 @@ public class MainActivity extends BetterListActivity {
         ActionBar bar = getActionBar();
 
         bar.setSubtitle(null);
-
-        //        bar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+        
+        // Set up dropdown campus navigation
+        bar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
         SpinnerAdapter spin = ArrayAdapter.createFromResource(this,
                 R.array.campus_list, R.layout.nav_item);
-        
         mNavListener = new OnNavigationListener() {
             String[] campuses = getResources().getStringArray(R.array.campus_list);
+            String[] keys = getResources().getStringArray(R.array.campus_key_list);
             @Override
             public boolean onNavigationItemSelected(int pos, long itemId) {
                 Log.d("CLASSES-nav",
                         String.format("Selected: %s", campuses[pos]));
 
                 setupSearchHint((SearchView)mSearchItem.getActionView(), pos);
-                startRefresh();
-                // hopefully clears out contents
+                startRefresh(keys[pos]);
+                // Clear detail fragment and/or jump back to class list
                 if (mContent != null) {
                     backToList();
                 }
                 return true;
             }
         };
-        
         bar.setListNavigationCallbacks(spin, mNavListener);
 
         super.onCreate(icicle, view);
@@ -175,7 +184,19 @@ public class MainActivity extends BetterListActivity {
             // Collapse the search view
             if (mSearchItem != null)
                 mSearchItem.collapseActionView();
-            startRefresh(query);
+            
+            String campus;
+            try {
+                campus = getSelectedCampus();
+            } catch (ArrayIndexOutOfBoundsException e) {
+                // Thrown when index was -1, i.e. activity not fully running
+                // yet. From what I have seen, this happens sometimes when
+                // re-entering the app after pausing it when at a search page.
+                // In this case, we'll just pretend no search was asked for,
+                // which most likely is the case.
+                return;
+            }
+            startRefresh(campus, query);
         }
     }
 
@@ -206,17 +227,16 @@ public class MainActivity extends BetterListActivity {
         }
     }
 
-    public void startRefresh() {
-        startRefresh(null);
+    public void startRefresh(String campus) {
+        startRefresh(campus, null);
     }
     
     /**
      * Start refresh, but with a search query too.
      * @param query query being searched for
      */
-    public void startRefresh(String query) {
+    public void startRefresh(String campus, String query) {
         mRefresh.updateRefresh(true);
-        String campus = getSelectedCampus();
         String defaultServer = getResources().getString(R.string.default_server);
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         SearchURL url = new SearchURL(
@@ -252,16 +272,18 @@ public class MainActivity extends BetterListActivity {
 
     /**
      * Show a new detail fragment for the newly selected item or whatnot
-     * @param id gap ID for the selected gap
+     * @param li ListItem that was clicked upon
+     * @param gap the Gap object used to fill in detail fragment
      */
-    void setContentGap(final int id) {
-        //        Toast.makeText(MainActivity.this,
-        //                String.format("Space: %d", id), Toast.LENGTH_SHORT).show();
-        Bundle arguments = new Bundle();
-        arguments.putInt(ClassroomDetailFragment.ARG_ITEM_ID, id);
-        mContent = new ClassroomDetailFragment();
-        mContent.setArguments(arguments);
-
+    void setContentGap(final ListItem li, final Gap gap) {
+        mContent = new ClassroomDetailFragment() {
+            @Override
+            public void onConfigurationChanged(Configuration config) {
+                super.onConfigurationChanged(config);
+                setContentGap(li, gap);
+            }
+        }
+        .setGap(gap);
         getFragment().setContent(mContent, false);
     }
 
@@ -269,17 +291,18 @@ public class MainActivity extends BetterListActivity {
      * Add a new class item listing
      * @param g the Gap object being added to the list and stuff
      */
-    private void addGap(Gap g) {
-        ClassroomContent.addItem(g);
-        final int id = g.getGapId();
+    private void addGap(final Gap gap) {
+        ClassroomContent.addItem(gap);
         String timespan = String.format("%s to %s",
-                g.getStartTime(), g.getEndTime());
-        addItem("Rooms", new ListItem(getFragment(), g.getFullName(), timespan){
+                gap.getStartTime(), gap.getEndTime());
+        String name = gap.getFullName();
+        addItem(R.string.class_list_header,
+                new ListItem(getFragment(), name, timespan) {
             @Override
             public void onClick(View v) {
                 super.onClick(v);
 
-                setContentGap(id);
+                setContentGap(this, gap);
             }
         });
     }
@@ -289,12 +312,7 @@ public class MainActivity extends BetterListActivity {
      */
     private void clearGaps() {
         try {
-            getFragment().removeSection("Rooms");
-        } catch (Exception e) {
-            // wasn't there, alright.
-        }
-        try {
-            getFragment().removeSection("Results");
+            getFragment().removeSection(R.string.class_list_header);
         } catch (Exception e) {
             // wasn't there, alright.
         }

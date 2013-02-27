@@ -14,7 +14,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -37,74 +36,45 @@ public class ClassroomDetailFragment extends BetterListFragment {
 	 */
 	public static final String ARG_ITEM_ID = "item_id";
 	
-	private Gap mGap;
+	private Gap gap;
 
-
-	/**
-	 * Mandatory empty constructor for the fragment manager to instantiate the
-	 * fragment (e.g. upon screen orientation changes).
-	 */
-	public ClassroomDetailFragment() {
+	public ClassroomDetailFragment setGap(Gap gap) {
+	    this.gap = gap;
+	    return this;
 	}
 	
-	@Override
-	public void onConfigurationChanged(Configuration config) {
-	    super.onConfigurationChanged(config);
-	    // Reload information!
-	    ((MainActivity)getActivity()).setContentGap(mGap.getGapId());
-	}
-//
-//    @Override
-//    public void onPrepareOptionsMenu(Menu menu) {
-//        super.onPrepareOptionsMenu(menu);
-//        getActivity().getActionBar()
-//            .setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
-//
-//    }
-//
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        switch (item.getItemId()) {
-//        case android.R.id.home:
-//            getActivity().onBackPressed();
-//            return true;
-//        }
-//        return false;
-//    }
-
     @Override
     protected void onCreate(Bundle icicle, View view) {
         super.onCreate(icicle);
         
-        setHasOptionsMenu(true);
-
-        if (getArguments().containsKey(ARG_ITEM_ID))
-            mGap = ClassroomContent.GAPMAP.get(getArguments().getInt(ARG_ITEM_ID));
-        
         SpaceInfo space = null;
-        if (mGap == null) {
-            mGap = new Gap();
-            mGap.setBuilding("Placeholder...");
-            mGap.setRoomNumber("Unknown");
-            mGap.setStartTime("midnight");
-            mGap.setEndTime("11:59pm");
-            mGap.setGapLength(444);
-            mGap.setSpaceId(-1);
+        if (gap == null) {
+            gap = new Gap();
+            gap.setBuilding("Placeholder...");
+            gap.setRoomNumber("Unknown");
+            gap.setStartTime("midnight");
+            gap.setEndTime("11:59pm");
+            gap.setGapLength(444);
+            gap.setSpaceId(-1);
         } else {
             // Fetch the space info if there is one
-            space = ClassroomContent.SPACEMAP.get(mGap.getSpaceId());
+            space = ClassroomContent.SPACEMAP.get(gap.getSpaceId());
         }
+        
         // Make UI
-        WidgetUtils.buildGapDetails(this, mGap, space);
+        WidgetUtils.buildGapDetails(this, gap, space);
         
         if (space == null) {
             // Need to download space info, whoop whoop
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            addItem(R.string.detail_section_features, new ListItem(
+                    this, "Loading...", null, 0));
+            
+            SharedPreferences prefs = PreferenceManager
+                    .getDefaultSharedPreferences(getActivity());
             SearchURL url = new SearchURL(
                     prefs.getString("pref_info_url",
                             getString(R.string.default_server_space)));
-            url.query("spaceID", Integer.toString(mGap.getSpaceId()));
-            addItem("Room Info", new ListItem(this, "Loading...", null, 0));
+            url.query("spaceID", Integer.toString(gap.getSpaceId()));
             new SpaceSearch().execute(url.toURL());
         }
     }
@@ -113,7 +83,7 @@ public class ClassroomDetailFragment extends BetterListFragment {
         if (success) {
             try {
                 SpaceInfo spaceinfo = new SpaceInfo(info);
-                WidgetUtils.buildGapDetails(this, mGap, spaceinfo);
+                WidgetUtils.buildGapDetails(this, gap, spaceinfo);
                 // save off the space info
                 ClassroomContent.SPACEMAP.put(spaceinfo.getSpaceId(), spaceinfo);
             } catch (Exception e) {
@@ -121,7 +91,7 @@ public class ClassroomDetailFragment extends BetterListFragment {
             }
         } else {
             try {
-                WidgetUtils.buildGapDetails(this, mGap, null);
+                WidgetUtils.buildGapDetails(this, gap, null);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -141,7 +111,7 @@ public class ClassroomDetailFragment extends BetterListFragment {
             String reply = "";
             try {
                 String url = urls[0];
-                Log.d("ClassSearch", String.format("Querying %s", url));
+                Log.d("Gap Search", String.format("Querying %s", url));
                 DefaultHttpClient client = new DefaultHttpClient();
                 final HttpParams params = client.getParams();
                 // 3 seconds connection timeout
@@ -164,8 +134,7 @@ public class ClassroomDetailFragment extends BetterListFragment {
                     reply += s;
                 }
 
-                Log.d("Classes Search", String.format("Read %d",
-                                                    reply.length()));
+                Log.d("Gap Search", String.format("%s", reply));
                 retval.result = reply;
             } catch (SocketTimeoutException soe) {
                 Log.e("Classes Search", "Socket timed out");
