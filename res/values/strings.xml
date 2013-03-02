@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">ClassFinder</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_section1">West Bank</string>
+    <string name="title_section2">East Bank</string>
+    <string name="title_section3">St. Paul</string>
+
+</resources>
